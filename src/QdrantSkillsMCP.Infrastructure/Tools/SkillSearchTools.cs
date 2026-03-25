@@ -1,12 +1,11 @@
 using System.ComponentModel;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using QdrantSkillsMCP.Core.Interfaces;
-using QdrantSkillsMCP.Core.Models;
 using QdrantSkillsMCP.Core.Validation;
+using QdrantSkillsMCP.Infrastructure.Configuration;
 
 namespace QdrantSkillsMCP.Infrastructure.Tools;
 
@@ -33,16 +32,19 @@ public sealed class SkillSearchTools(
     /// Includes an "ALREADY LOADED SKILLS" prefix listing skills previously loaded in this session.
     /// </summary>
     [McpServerTool(Name = "search-skills", ReadOnly = true)]
-    [Description("Search for skills by semantic similarity. Returns ranked results with scores. Use temperature (0.0=strict, 1.0=loose) to control match threshold. Set includeContent=false for metadata-only results.")]
+    [Description("Search for skills by semantic similarity. Returns ranked results with scores. Use temperature (0.0=strict, 1.0=loose) to control match threshold. outputMode: 'full' (default, returns content and marks loaded), 'names' (name strings only), 'summaries' (name+description+tags+score).")]
     public async Task<string> SearchSkills(
         [Description("Natural language search query")] string query,
         [Description("Maximum number of results to return")] int maxResults = 5,
         [Description("Search strictness: 0.0 (strict/exact) to 1.0 (loose/broad). Omit for no threshold.")] float? temperature = null,
-        [Description("If true (default), returns full skill content. If false, returns metadata only (name, description, tags, score).")] bool includeContent = true,
+        [Description("Output detail level: 'full' (default), 'names', or 'summaries'")] string outputMode = "full",
+        [Description("Optional session ID for tracking loaded skills. Omit for default process-scoped session.")] string? sessionId = null,
         CancellationToken ct = default)
     {
         try
         {
+            var mode = ParseOutputMode(outputMode);
+
             var queryEmbedding = await embeddingService.GenerateEmbeddingAsync(query, ct);
 
             // Map temperature to score threshold: temperature is 0.0 (strict) to 1.0 (loose)
@@ -54,55 +56,56 @@ public sealed class SkillSearchTools(
             var results = await repository.SearchAsync(queryEmbedding, maxResults, scoreThreshold, ct);
 
             // Build already-loaded prefix
-            var loadedSkills = sessionTracker.GetLoadedSkills();
+            var loadedSkills = sessionTracker.GetLoadedSkills(sessionId);
             var alreadyLoadedPrefix = loadedSkills.Count > 0
                 ? $"ALREADY LOADED SKILLS: {string.Join(", ", loadedSkills)}\n\n"
                 : string.Empty;
 
-            // Build response based on includeContent flag
-            object responseData;
-            if (includeContent)
+            string json;
+            switch (mode)
             {
-                // Mark skills as loaded in session (only when content is included)
-                foreach (var result in results)
-                {
-                    sessionTracker.MarkLoaded(result.Skill.Name);
-                }
+                case OutputMode.Names:
+                    // Return JSON array of skill name strings only. Do NOT mark as loaded.
+                    json = JsonSerializer.Serialize(
+                        results.Select(r => r.Skill.Name).ToArray(), JsonOptions);
+                    break;
 
-                responseData = new SearchResponse
-                {
-                    AlreadyLoaded = loadedSkills.Count > 0 ? loadedSkills.ToArray() : null,
-                    Results = results.Select(r => new SearchResultDto
+                case OutputMode.Summaries:
+                    // Return array of {name, description, tags, score}. Do NOT mark as loaded.
+                    json = JsonSerializer.Serialize(
+                        results.Select(r => new SummaryDto
+                        {
+                            Name = r.Skill.Name,
+                            Description = r.Skill.Description,
+                            Tags = r.Skill.Tags,
+                            Score = r.Score
+                        }).ToArray(), JsonOptions);
+                    break;
+
+                default: // Full
+                    // Mark skills as loaded in session (only when content is included)
+                    foreach (var result in results)
                     {
-                        Name = r.Skill.Name,
-                        Description = r.Skill.Description,
-                        Tags = r.Skill.Tags,
-                        Score = r.Score,
-                        RawContent = r.Skill.RawContent
-                    }).ToArray()
-                };
-            }
-            else
-            {
-                // Metadata only -- do NOT mark as loaded (content not fetched)
-                responseData = new SearchResponse
-                {
-                    AlreadyLoaded = loadedSkills.Count > 0 ? loadedSkills.ToArray() : null,
-                    Results = results.Select(r => new SearchResultDto
+                        sessionTracker.MarkLoaded(result.Skill.Name, sessionId);
+                    }
+
+                    json = JsonSerializer.Serialize(new SearchResponse
                     {
-                        Name = r.Skill.Name,
-                        Description = r.Skill.Description,
-                        Tags = r.Skill.Tags,
-                        Score = r.Score,
-                        RawContent = null
-                    }).ToArray()
-                };
+                        AlreadyLoaded = loadedSkills.Count > 0 ? loadedSkills.ToArray() : null,
+                        Results = results.Select(r => new SearchResultDto
+                        {
+                            Name = r.Skill.Name,
+                            Description = r.Skill.Description,
+                            Tags = r.Skill.Tags,
+                            Score = r.Score,
+                            RawContent = r.Skill.RawContent
+                        }).ToArray()
+                    }, JsonOptions);
+                    break;
             }
 
-            var json = JsonSerializer.Serialize(responseData, JsonOptions);
-
-            logger.LogInformation("Search for '{Query}' returned {Count} results (includeContent={IncludeContent})",
-                query, results.Count, includeContent);
+            logger.LogInformation("Search for '{Query}' returned {Count} results (outputMode={OutputMode})",
+                query, results.Count, mode);
 
             return $"{alreadyLoadedPrefix}{json}";
         }
@@ -121,6 +124,7 @@ public sealed class SkillSearchTools(
     [Description("Load a specific skill by exact name. Returns the full skill content (current version, no cache). Marks the skill as loaded in this session.")]
     public async Task<string> LoadSkill(
         [Description("Exact name of the skill to load")] string name,
+        [Description("Optional session ID for tracking loaded skills. Omit for default process-scoped session.")] string? sessionId = null,
         CancellationToken ct = default)
     {
         try
@@ -134,7 +138,7 @@ public sealed class SkillSearchTools(
                 return $"Error: Skill '{name}' not found.";
 
             // Mark as loaded in session
-            sessionTracker.MarkLoaded(skill.Name);
+            sessionTracker.MarkLoaded(skill.Name, sessionId);
 
             logger.LogInformation("Skill '{SkillName}' loaded", name);
 
@@ -158,36 +162,74 @@ public sealed class SkillSearchTools(
     }
 
     /// <summary>
-    /// Lists all non-archived skills with their metadata (name, description, tags, updated date).
+    /// Lists all non-archived skills with their metadata.
+    /// Output detail controlled by outputMode parameter.
     /// </summary>
     [McpServerTool(Name = "list-skills", ReadOnly = true)]
-    [Description("List all available (non-archived) skills. Returns metadata for each skill: name, description, tags, and last updated date.")]
-    public async Task<string> ListSkills(CancellationToken ct = default)
+    [Description("List all available (non-archived) skills. outputMode: 'full' (default, name+description+tags+updatedAt), 'names' (name strings only), 'summaries' (name+description only).")]
+    public async Task<string> ListSkills(
+        [Description("Output detail level: 'full' (default), 'names', or 'summaries'")] string outputMode = "full",
+        CancellationToken ct = default)
     {
         try
         {
+            var mode = ParseOutputMode(outputMode);
             var skills = await repository.ListAsync(ct);
 
-            var response = new ListSkillsResponse
+            string json;
+            switch (mode)
             {
-                Skills = skills.Select(s => new SkillMetadataDto
-                {
-                    Name = s.Name,
-                    Description = s.Description,
-                    Tags = s.Tags,
-                    UpdatedAt = s.UpdatedAt
-                }).ToArray(),
-                Total = skills.Count
-            };
+                case OutputMode.Names:
+                    json = JsonSerializer.Serialize(
+                        skills.Select(s => s.Name).ToArray(), JsonOptions);
+                    break;
 
-            logger.LogInformation("Listed {Count} skills", skills.Count);
-            return JsonSerializer.Serialize(response, JsonOptions);
+                case OutputMode.Summaries:
+                    json = JsonSerializer.Serialize(new ListSkillsResponse
+                    {
+                        Skills = skills.Select(s => new SkillMetadataDto
+                        {
+                            Name = s.Name,
+                            Description = s.Description
+                        }).ToArray(),
+                        Total = skills.Count
+                    }, JsonOptions);
+                    break;
+
+                default: // Full
+                    json = JsonSerializer.Serialize(new ListSkillsResponse
+                    {
+                        Skills = skills.Select(s => new SkillMetadataDto
+                        {
+                            Name = s.Name,
+                            Description = s.Description,
+                            Tags = s.Tags,
+                            UpdatedAt = s.UpdatedAt
+                        }).ToArray(),
+                        Total = skills.Count
+                    }, JsonOptions);
+                    break;
+            }
+
+            logger.LogInformation("Listed {Count} skills (outputMode={OutputMode})", skills.Count, mode);
+            return json;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to list skills");
             return $"Error listing skills: {ex.Message}";
         }
+    }
+
+    /// <summary>
+    /// Parses a string outputMode to the <see cref="OutputMode"/> enum.
+    /// Defaults to <see cref="OutputMode.Full"/> on invalid input.
+    /// </summary>
+    private static OutputMode ParseOutputMode(string? outputMode)
+    {
+        if (Enum.TryParse<OutputMode>(outputMode, ignoreCase: true, out var parsed))
+            return parsed;
+        return OutputMode.Full;
     }
 
     // --- Response DTOs for JSON serialization ---
@@ -205,6 +247,14 @@ public sealed class SkillSearchTools(
         public string[]? Tags { get; init; }
         public float Score { get; init; }
         public string? RawContent { get; init; }
+    }
+
+    private sealed class SummaryDto
+    {
+        public required string Name { get; init; }
+        public string? Description { get; init; }
+        public string[]? Tags { get; init; }
+        public float Score { get; init; }
     }
 
     private sealed class LoadSkillResponse
