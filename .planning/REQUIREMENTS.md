@@ -42,9 +42,9 @@
 
 - [x] **EMB-01**: Configurable embedding provider via `IEmbeddingGenerator` abstraction (Microsoft.Extensions.AI)
 - [x] **EMB-02**: OpenAI embedding provider (text-embedding-3-small/large)
-- [ ] **EMB-03**: Local ONNX embedding provider (e.g. all-MiniLM-L6-v2)
-- [ ] **EMB-04**: Ollama embedding provider (via OllamaSharp)
-- [ ] **EMB-05**: Azure OpenAI embedding provider
+- [x] **EMB-03**: Local ONNX embedding provider (e.g. all-MiniLM-L6-v2)
+- [x] **EMB-04**: Ollama embedding provider (via OllamaSharp)
+- [x] **EMB-05**: Azure OpenAI embedding provider
 - [ ] **EMB-06**: Embedding dimension validation on startup (detects mismatches when switching providers)
 
 ### CLI
@@ -121,9 +121,9 @@
 | SRCH-10 | Phase 2 | Complete |
 | EMB-01 | Phase 1 | Complete |
 | EMB-02 | Phase 1 | Complete |
-| EMB-03 | Phase 2 | Pending |
-| EMB-04 | Phase 2 | Pending |
-| EMB-05 | Phase 2 | Pending |
+| EMB-03 | Phase 2 | Complete |
+| EMB-04 | Phase 2 | Complete |
+| EMB-05 | Phase 2 | Complete |
 | EMB-06 | Phase 2 | Pending |
 | CLI-01 | Phase 3 | Pending |
 | CLI-02 | Phase 3 | Pending |
