@@ -34,7 +34,7 @@ Agents can semantically search and retrieve the right skills at the right time �
 - [ ] Packaged as NuGet tool, invoked via `dnx QdrantSkillsMCP`
 - [ ] Bundled SKILL.md: a skill file that teaches agents how to use QdrantSkillsMCP effectively + curated short-list of frequently used skills to reduce search calls
 - [ ] skills-guru integration: full integration as a first-class backend — push/sync skills TO QdrantSkillsMCP and query/search FROM it
-- [ ] Local development via Aspire v9.2 AppHost running Qdrant via Aspire integration
+- [ ] Local development via Aspire v13.2 AppHost running Qdrant via Aspire integration
 - [ ] Full XUnit v3 (MTP) test coverage using Aspire testing framework
 
 ### Out of Scope
@@ -58,7 +58,7 @@ Agents can semantically search and retrieve the right skills at the right time �
 
 - **Runtime**: .NET 10 — required for latest Aspire and Agent Framework compatibility
 - **Test Framework**: XUnit v3 with MTP (Microsoft Testing Platform) runner — no older xunit versions
-- **Aspire Version**: v9.2 for AppHost and testing infrastructure
+- **Aspire Version**: v13.2 for AppHost and testing infrastructure (Microsoft skipped versions 10-12)
 - **Package Distribution**: NuGet tool package, invoked via `dnx QdrantSkillsMCP`
 - **MCP Transport**: stdio as primary transport (standard for local MCP servers)
 - **Skill Schema**: Must preserve full Claude Code skill format (frontmatter + markdown body) — no lossy transformations

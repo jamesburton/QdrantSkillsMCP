@@ -1,0 +1,148 @@
+# Requirements: QdrantSkillsMCP
+
+**Defined:** 2026-03-25
+**Core Value:** Agents can semantically search and retrieve the right skills at the right time — turning a flat collection of skill files into an intelligent, context-aware skill library accessible to any MCP-compatible agent.
+
+## v1 Requirements
+
+### MCP Transport
+
+- [ ] **MCP-01**: Server runs via `--stdio` flag for standard MCP stdio transport
+- [ ] **MCP-02**: Server exposes all skill tools as MCP tool endpoints discoverable by agents
+
+### Qdrant Connection
+
+- [ ] **QDR-01**: Connects to configurable Qdrant instance (default: localhost:6334)
+- [ ] **QDR-02**: Uses configurable collection name (default: `skills`)
+- [ ] **QDR-03**: Supports Qdrant API key for authenticated Qdrant instances
+- [ ] **QDR-04**: Auto-creates collection with correct vector dimensions on first use
+
+### Skill CRUD
+
+- [ ] **CRUD-01**: `add-skill` tool persists a skill (markdown with YAML frontmatter) to Qdrant with vector embedding
+- [ ] **CRUD-02**: `update-skill` tool updates an existing skill's content and re-generates its embedding
+- [ ] **CRUD-03**: `delete-skill` tool permanently removes a skill from the collection
+- [ ] **CRUD-04**: `archive-skill` tool soft-hides a skill without deletion (excluded from search, restorable)
+- [ ] **CRUD-05**: YAML frontmatter and markdown body are preserved losslessly through storage and retrieval round-trips
+
+### Search & Retrieval
+
+- [ ] **SRCH-01**: `search-skills` tool performs semantic vector search using context summary + current prompt
+- [ ] **SRCH-02**: `search-skills` supports configurable `temperature` parameter to tighten/loosen matching threshold
+- [ ] **SRCH-03**: `search-skills` supports configurable `max-results` parameter
+- [ ] **SRCH-04**: `load-skill` tool retrieves specific skill(s) by name
+- [ ] **SRCH-05**: `load-skill` supports reloading updated skills (always returns current version)
+- [ ] **SRCH-06**: `list-skills` tool returns inventory of all skills in the collection
+- [ ] **SRCH-07**: `--names` option returns skill names only
+- [ ] **SRCH-08**: `--summaries` option returns name + short summary (description from frontmatter)
+- [ ] **SRCH-09**: Search results include `ALREADY LOADED SKILLS: {list}` showing skills already returned in current session
+- [ ] **SRCH-10**: Session tracking defaults to MCP connection lifecycle, supports explicit session ID override
+
+### Embedding Providers
+
+- [ ] **EMB-01**: Configurable embedding provider via `IEmbeddingGenerator` abstraction (Microsoft.Extensions.AI)
+- [ ] **EMB-02**: OpenAI embedding provider (text-embedding-3-small/large)
+- [ ] **EMB-03**: Local ONNX embedding provider (e.g. all-MiniLM-L6-v2)
+- [ ] **EMB-04**: Ollama embedding provider (via OllamaSharp)
+- [ ] **EMB-05**: Azure OpenAI embedding provider
+- [ ] **EMB-06**: Embedding dimension validation on startup (detects mismatches when switching providers)
+
+### CLI
+
+- [ ] **CLI-01**: `--console` flag enables CLI mode with single-shot subcommands and JSON output
+- [ ] **CLI-02**: `--console` without subcommand enters interactive REPL mode
+- [ ] **CLI-03**: `--setup` command auto-configures MCP server entry in agent config files
+- [ ] **CLI-04**: `--setup` supports claude, copilot, codex, opencode, docker-agent, kilocode, factory-droid and other detected agents
+- [ ] **CLI-05**: `--setup` auto-writes config where possible, falls back to snippets when format unknown
+- [ ] **CLI-06**: `--setup` supports project-level and user-level configuration
+- [ ] **CLI-07**: `--setup` operates interactively if no parameters provided, accepts args for non-interactive use
+
+### Distribution & Dev Experience
+
+- [ ] **DIST-01**: Packaged as NuGet tool, invocable via `dnx QdrantSkillsMCP`
+- [ ] **DIST-02**: Aspire v13.2 AppHost runs Qdrant via Aspire integration for local development
+- [ ] **DIST-03**: Full XUnit v3 (MTP) test coverage using Aspire testing framework
+
+### Bundled Skill
+
+- [ ] **BSKL-01**: Ships with a SKILL.md that teaches agents how to use QdrantSkillsMCP effectively
+- [ ] **BSKL-02**: Bundled skill includes curated short-list of frequently used skills to reduce search calls
+
+## v2 Requirements
+
+### Authentication
+
+- **AUTH-01**: API key bearer token authentication in server mode
+- **AUTH-02**: OAuth/OIDC authentication for enterprise SSO
+
+### Ecosystem Integration
+
+- **ECO-01**: skills-guru integration — push/sync skills TO QdrantSkillsMCP as storage backend
+- **ECO-02**: skills-guru integration — query/search skills FROM QdrantSkillsMCP
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| GUI / web dashboard | CLI + MCP tools only — agents are the primary consumers |
+| Skill authoring/editing UI | Skills are authored as markdown files in editors/IDEs |
+| Multi-tenant SaaS hosting | Local/self-hosted tool — users deploy their own instance |
+| Real-time collaborative editing | Skills are static documents versioned via git |
+| Non-.NET client SDKs | MCP is the protocol — any MCP client in any language works |
+| Skill marketplace / discovery | Better served by complementary tools (SkillSync) |
+| Knowledge graph / relationship mapping | Stay focused on vector similarity — skills are independent docs |
+| Hybrid BM25 + vector search | Pure vector search sufficient for skill-length documents |
+| Security scanning of skill content | Better handled by SkillSync or upstream tooling |
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| MCP-01 | Phase 1 | Pending |
+| MCP-02 | Phase 1 | Pending |
+| QDR-01 | Phase 1 | Pending |
+| QDR-02 | Phase 1 | Pending |
+| QDR-03 | Phase 1 | Pending |
+| QDR-04 | Phase 1 | Pending |
+| CRUD-01 | Phase 1 | Pending |
+| CRUD-02 | Phase 1 | Pending |
+| CRUD-03 | Phase 1 | Pending |
+| CRUD-04 | Phase 1 | Pending |
+| CRUD-05 | Phase 1 | Pending |
+| SRCH-01 | Phase 1 | Pending |
+| SRCH-02 | Phase 1 | Pending |
+| SRCH-03 | Phase 1 | Pending |
+| SRCH-04 | Phase 1 | Pending |
+| SRCH-05 | Phase 1 | Pending |
+| SRCH-06 | Phase 1 | Pending |
+| SRCH-07 | Phase 2 | Pending |
+| SRCH-08 | Phase 2 | Pending |
+| SRCH-09 | Phase 2 | Pending |
+| SRCH-10 | Phase 2 | Pending |
+| EMB-01 | Phase 1 | Pending |
+| EMB-02 | Phase 1 | Pending |
+| EMB-03 | Phase 2 | Pending |
+| EMB-04 | Phase 2 | Pending |
+| EMB-05 | Phase 2 | Pending |
+| EMB-06 | Phase 2 | Pending |
+| CLI-01 | Phase 3 | Pending |
+| CLI-02 | Phase 3 | Pending |
+| CLI-03 | Phase 3 | Pending |
+| CLI-04 | Phase 3 | Pending |
+| CLI-05 | Phase 3 | Pending |
+| CLI-06 | Phase 3 | Pending |
+| CLI-07 | Phase 3 | Pending |
+| DIST-01 | Phase 3 | Pending |
+| DIST-02 | Phase 1 | Pending |
+| DIST-03 | Phase 1 | Pending |
+| BSKL-01 | Phase 3 | Pending |
+| BSKL-02 | Phase 3 | Pending |
+
+**Coverage:**
+- v1 requirements: 37 total
+- Mapped to phases: 37
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-03-25*
+*Last updated: 2026-03-25 after initial definition*
