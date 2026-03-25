@@ -35,19 +35,19 @@ Progress: [████████░░] 80%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 6min
-- Total execution time: 0.32 hours
+- Total execution time: 0.38 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-core-mcp-server | 3 | 19min | 6min |
+| 01-core-mcp-server | 4 | 23min | 6min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (9min), 01-02 (5min), 01-03 (5min)
-- Trend: stable
+- Last 5 plans: 01-01 (9min), 01-02 (5min), 01-03 (5min), 01-04 (4min)
+- Trend: improving
 
 *Updated after each plan completion*
 
@@ -70,6 +70,8 @@ Recent decisions affecting current work:
 - [01-03]: Removed ISessionTracker from SkillCrudTools constructor (unused by CRUD operations)
 - [01-03]: Search DTOs are private nested classes inside SkillSearchTools for encapsulation
 - [01-03]: Temperature-to-threshold: scoreThreshold = 1.0 - temperature
+- [01-04]: Added xunit.runner.visualstudio 3.1.5 for dotnet test discovery (xunit.v3 alone insufficient)
+- [01-04]: Extra frontmatter fields: IgnoreUnmatchedProperties drops unknown YAML keys; test validates explicit "extra" key mechanism
 
 ### Pending Todos
 
@@ -83,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T19:01:09Z
-Stopped at: Completed 01-03-PLAN.md
-Resume file: .planning/phases/01-core-mcp-server/01-03-SUMMARY.md
+Last session: 2026-03-25T19:00:33Z
+Stopped at: Completed 01-04-PLAN.md
+Resume file: .planning/phases/01-core-mcp-server/01-04-SUMMARY.md

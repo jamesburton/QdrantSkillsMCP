@@ -61,7 +61,7 @@
 
 - [ ] **DIST-01**: Packaged as NuGet tool, invocable via `dnx QdrantSkillsMCP`
 - [x] **DIST-02**: Aspire v13.2 AppHost runs Qdrant via Aspire integration for local development
-- [ ] **DIST-03**: Full XUnit v3 (MTP) test coverage using Aspire testing framework
+- [x] **DIST-03**: Full XUnit v3 (MTP) test coverage using Aspire testing framework
 
 ### Bundled Skill
 
@@ -134,7 +134,7 @@
 | CLI-07 | Phase 3 | Pending |
 | DIST-01 | Phase 3 | Pending |
 | DIST-02 | Phase 1 | Complete |
-| DIST-03 | Phase 1 | Pending |
+| DIST-03 | Phase 1 | Complete |
 | BSKL-01 | Phase 3 | Pending |
 | BSKL-02 | Phase 3 | Pending |
 
