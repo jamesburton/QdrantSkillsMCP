@@ -4,37 +4,56 @@ using QdrantSkillsMCP.Core.Interfaces;
 namespace QdrantSkillsMCP.Infrastructure.Session;
 
 /// <summary>
-/// In-process session tracker for stdio transport (one process = one session).
-/// Thread-safe via <see cref="ConcurrentDictionary{TKey,TValue}"/>.
+/// In-process session tracker supporting keyed sessions.
+/// When <c>sessionId</c> is null, operations target the default session.
+/// Thread-safe via nested <see cref="ConcurrentDictionary{TKey,TValue}"/>.
 /// Registered as singleton in DI.
 /// </summary>
 public sealed class InMemorySessionTracker : ISessionTracker
 {
-    private readonly ConcurrentDictionary<string, byte> _loadedSkills = new(StringComparer.OrdinalIgnoreCase);
+    internal const string DefaultSessionId = "__default__";
+
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _sessions = new(StringComparer.Ordinal);
+
+    private ConcurrentDictionary<string, byte> GetSession(string? sessionId)
+    {
+        var key = sessionId ?? DefaultSessionId;
+        return _sessions.GetOrAdd(key, _ => new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase));
+    }
 
     /// <inheritdoc />
-    public void MarkLoaded(string skillName)
+    public void MarkLoaded(string skillName, string? sessionId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(skillName);
-        _loadedSkills.TryAdd(skillName, 0);
+        GetSession(sessionId).TryAdd(skillName, 0);
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<string> GetLoadedSkills()
+    public IReadOnlyList<string> GetLoadedSkills(string? sessionId = null)
     {
-        return _loadedSkills.Keys.Order().ToList().AsReadOnly();
+        var key = sessionId ?? DefaultSessionId;
+        if (!_sessions.TryGetValue(key, out var session))
+            return Array.Empty<string>();
+
+        return session.Keys.Order().ToList().AsReadOnly();
     }
 
     /// <inheritdoc />
-    public bool IsLoaded(string skillName)
+    public bool IsLoaded(string skillName, string? sessionId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(skillName);
-        return _loadedSkills.ContainsKey(skillName);
+        var key = sessionId ?? DefaultSessionId;
+        if (!_sessions.TryGetValue(key, out var session))
+            return false;
+
+        return session.ContainsKey(skillName);
     }
 
     /// <inheritdoc />
-    public void Reset()
+    public void Reset(string? sessionId = null)
     {
-        _loadedSkills.Clear();
+        var key = sessionId ?? DefaultSessionId;
+        if (_sessions.TryGetValue(key, out var session))
+            session.Clear();
     }
 }
