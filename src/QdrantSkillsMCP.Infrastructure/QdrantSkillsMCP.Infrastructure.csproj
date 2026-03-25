@@ -21,4 +21,8 @@
     <ProjectReference Include="..\QdrantSkillsMCP.Core\QdrantSkillsMCP.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="QdrantSkillsMCP.UnitTests" />
+  </ItemGroup>
+
 </Project>

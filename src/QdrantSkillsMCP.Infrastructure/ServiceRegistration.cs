@@ -46,6 +46,10 @@ public static class ServiceRegistration
                 apiKey: options.QdrantApiKey);
         });
 
+        // DimensionValidator -- IHostedService that validates embedding dimensions on startup
+        // Registered before CollectionInitializer so dimension check runs first
+        services.AddHostedService<DimensionValidator>();
+
         // CollectionInitializer -- singleton, lazy collection creation
         services.AddSingleton<CollectionInitializer>();
 
