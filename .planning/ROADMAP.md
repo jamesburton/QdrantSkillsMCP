@@ -46,11 +46,12 @@ Plans:
   2. Users can switch between OpenAI, ONNX, Ollama, and Azure OpenAI embedding providers via configuration
   3. Startup detects and reports embedding dimension mismatches when the configured provider differs from the collection's existing vectors
   4. The `--names` and `--summaries` output modes return progressively less data for large skill libraries
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- Search intelligence: output modes, keyed session tracking, sessionId param, reset-session tool
+- [ ] 02-02-PLAN.md -- Embedding providers: ONNX, Ollama, Azure OpenAI services + provider selection + AppHost
+- [ ] 02-03-PLAN.md -- Dimension validation IHostedService + integration tests for Phase 2
 
 ### Phase 3: CLI, Distribution, and Bundled Skill
 **Goal**: Users can install via dnx, configure any supported agent in one command, and agents learn to use the server from its bundled skill
@@ -75,5 +76,5 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
-| 2. Search Intelligence and Embedding Providers | 0/2 | Not started | - |
+| 2. Search Intelligence and Embedding Providers | 0/3 | Not started | - |
 | 3. CLI, Distribution, and Bundled Skill | 0/2 | Not started | - |
