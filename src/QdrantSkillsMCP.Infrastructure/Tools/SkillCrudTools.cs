@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 using QdrantSkillsMCP.Core.Interfaces;
@@ -16,7 +15,6 @@ namespace QdrantSkillsMCP.Infrastructure.Tools;
 public sealed class SkillCrudTools(
     ISkillRepository repository,
     IEmbeddingService embeddingService,
-    ISessionTracker sessionTracker,
     SkillParser parser,
     ILogger<SkillCrudTools> logger)
 {
