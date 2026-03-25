@@ -28,12 +28,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Semantic search returns relevant skills ranked by vector similarity, with configurable temperature and max-results
   4. Aspire AppHost starts Qdrant automatically and integration tests pass end-to-end against it
   5. The Qdrant collection is auto-created with correct vector dimensions and payload indexes on first use
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md -- Solution scaffold, Core interfaces/models, AppHost, configuration
+- [ ] 01-02-PLAN.md -- Infrastructure services (YAML parser, Qdrant repo, embeddings, session tracker, DI wiring)
+- [ ] 01-03-PLAN.md -- MCP tool classes (CRUD + search) and Program.cs entry point
+- [ ] 01-04-PLAN.md -- Unit tests (parser, validator, session tracker, embedding service)
+- [ ] 01-05-PLAN.md -- Integration tests (Aspire fixture, CRUD, search, collection init)
 
 ### Phase 2: Search Intelligence and Embedding Providers
 **Goal**: Users can choose their embedding provider and get session-aware, progressively-disclosed search results
@@ -72,6 +74,6 @@ Phases execute in numeric order: 1 -> 2 -> 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core MCP Server | 0/3 | Not started | - |
+| 1. Core MCP Server | 0/5 | Planned | - |
 | 2. Search Intelligence and Embedding Providers | 0/2 | Not started | - |
 | 3. CLI, Distribution, and Bundled Skill | 0/2 | Not started | - |
