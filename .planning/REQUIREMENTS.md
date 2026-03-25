@@ -7,8 +7,8 @@
 
 ### MCP Transport
 
-- [ ] **MCP-01**: Server runs via `--stdio` flag for standard MCP stdio transport
-- [ ] **MCP-02**: Server exposes all skill tools as MCP tool endpoints discoverable by agents
+- [x] **MCP-01**: Server runs via `--stdio` flag for standard MCP stdio transport
+- [x] **MCP-02**: Server exposes all skill tools as MCP tool endpoints discoverable by agents
 
 ### Qdrant Connection
 
@@ -19,20 +19,20 @@
 
 ### Skill CRUD
 
-- [ ] **CRUD-01**: `add-skill` tool persists a skill (markdown with YAML frontmatter) to Qdrant with vector embedding
-- [ ] **CRUD-02**: `update-skill` tool updates an existing skill's content and re-generates its embedding
-- [ ] **CRUD-03**: `delete-skill` tool permanently removes a skill from the collection
-- [ ] **CRUD-04**: `archive-skill` tool soft-hides a skill without deletion (excluded from search, restorable)
+- [x] **CRUD-01**: `add-skill` tool persists a skill (markdown with YAML frontmatter) to Qdrant with vector embedding
+- [x] **CRUD-02**: `update-skill` tool updates an existing skill's content and re-generates its embedding
+- [x] **CRUD-03**: `delete-skill` tool permanently removes a skill from the collection
+- [x] **CRUD-04**: `archive-skill` tool soft-hides a skill without deletion (excluded from search, restorable)
 - [x] **CRUD-05**: YAML frontmatter and markdown body are preserved losslessly through storage and retrieval round-trips
 
 ### Search & Retrieval
 
-- [ ] **SRCH-01**: `search-skills` tool performs semantic vector search using context summary + current prompt
-- [ ] **SRCH-02**: `search-skills` supports configurable `temperature` parameter to tighten/loosen matching threshold
-- [ ] **SRCH-03**: `search-skills` supports configurable `max-results` parameter
-- [ ] **SRCH-04**: `load-skill` tool retrieves specific skill(s) by name
-- [ ] **SRCH-05**: `load-skill` supports reloading updated skills (always returns current version)
-- [ ] **SRCH-06**: `list-skills` tool returns inventory of all skills in the collection
+- [x] **SRCH-01**: `search-skills` tool performs semantic vector search using context summary + current prompt
+- [x] **SRCH-02**: `search-skills` supports configurable `temperature` parameter to tighten/loosen matching threshold
+- [x] **SRCH-03**: `search-skills` supports configurable `max-results` parameter
+- [x] **SRCH-04**: `load-skill` tool retrieves specific skill(s) by name
+- [x] **SRCH-05**: `load-skill` supports reloading updated skills (always returns current version)
+- [x] **SRCH-06**: `list-skills` tool returns inventory of all skills in the collection
 - [ ] **SRCH-07**: `--names` option returns skill names only
 - [ ] **SRCH-08**: `--summaries` option returns name + short summary (description from frontmatter)
 - [ ] **SRCH-09**: Search results include `ALREADY LOADED SKILLS: {list}` showing skills already returned in current session
@@ -98,23 +98,23 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MCP-01 | Phase 1 | Pending |
-| MCP-02 | Phase 1 | Pending |
+| MCP-01 | Phase 1 | Complete |
+| MCP-02 | Phase 1 | Complete |
 | QDR-01 | Phase 1 | Complete |
 | QDR-02 | Phase 1 | Complete |
 | QDR-03 | Phase 1 | Complete |
 | QDR-04 | Phase 1 | Complete |
-| CRUD-01 | Phase 1 | Pending |
-| CRUD-02 | Phase 1 | Pending |
-| CRUD-03 | Phase 1 | Pending |
-| CRUD-04 | Phase 1 | Pending |
+| CRUD-01 | Phase 1 | Complete |
+| CRUD-02 | Phase 1 | Complete |
+| CRUD-03 | Phase 1 | Complete |
+| CRUD-04 | Phase 1 | Complete |
 | CRUD-05 | Phase 1 | Complete |
-| SRCH-01 | Phase 1 | Pending |
-| SRCH-02 | Phase 1 | Pending |
-| SRCH-03 | Phase 1 | Pending |
-| SRCH-04 | Phase 1 | Pending |
-| SRCH-05 | Phase 1 | Pending |
-| SRCH-06 | Phase 1 | Pending |
+| SRCH-01 | Phase 1 | Complete |
+| SRCH-02 | Phase 1 | Complete |
+| SRCH-03 | Phase 1 | Complete |
+| SRCH-04 | Phase 1 | Complete |
+| SRCH-05 | Phase 1 | Complete |
+| SRCH-06 | Phase 1 | Complete |
 | SRCH-07 | Phase 2 | Pending |
 | SRCH-08 | Phase 2 | Pending |
 | SRCH-09 | Phase 2 | Pending |

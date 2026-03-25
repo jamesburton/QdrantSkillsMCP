@@ -74,6 +74,6 @@ Phases execute in numeric order: 1 -> 2 -> 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core MCP Server | 2/5 | In Progress|  |
+| 1. Core MCP Server | 4/5 | In Progress|  |
 | 2. Search Intelligence and Embedding Providers | 0/2 | Not started | - |
 | 3. CLI, Distribution, and Bundled Skill | 0/2 | Not started | - |
