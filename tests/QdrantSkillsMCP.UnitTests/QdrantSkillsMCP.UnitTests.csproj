@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>QdrantSkillsMCP.UnitTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="NSubstitute" Version="5.*" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\QdrantSkillsMCP.Core\QdrantSkillsMCP.Core.csproj" />
+    <ProjectReference Include="..\..\src\QdrantSkillsMCP.Infrastructure\QdrantSkillsMCP.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

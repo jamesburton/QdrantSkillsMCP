@@ -1,5 +1,11 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/QdrantSkillsMCP.AppHost/QdrantSkillsMCP.AppHost.csproj" />
     <Project Path="src/QdrantSkillsMCP.Core/QdrantSkillsMCP.Core.csproj" />
+    <Project Path="src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/QdrantSkillsMCP.IntegrationTests/QdrantSkillsMCP.IntegrationTests.csproj" />
+    <Project Path="tests/QdrantSkillsMCP.UnitTests/QdrantSkillsMCP.UnitTests.csproj" />
   </Folder>
 </Solution>
