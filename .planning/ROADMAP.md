@@ -49,7 +49,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Search intelligence: output modes, keyed session tracking, sessionId param, reset-session tool
+- [x] 02-01-PLAN.md -- Search intelligence: output modes, keyed session tracking, sessionId param, reset-session tool
 - [ ] 02-02-PLAN.md -- Embedding providers: ONNX, Ollama, Azure OpenAI services + provider selection + AppHost
 - [ ] 02-03-PLAN.md -- Dimension validation IHostedService + integration tests for Phase 2
 
@@ -76,5 +76,5 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
-| 2. Search Intelligence and Embedding Providers | 0/3 | Not started | - |
+| 2. Search Intelligence and Embedding Providers | 1/3 | In progress | - |
 | 3. CLI, Distribution, and Bundled Skill | 0/2 | Not started | - |

@@ -33,10 +33,10 @@
 - [x] **SRCH-04**: `load-skill` tool retrieves specific skill(s) by name
 - [x] **SRCH-05**: `load-skill` supports reloading updated skills (always returns current version)
 - [x] **SRCH-06**: `list-skills` tool returns inventory of all skills in the collection
-- [ ] **SRCH-07**: `--names` option returns skill names only
-- [ ] **SRCH-08**: `--summaries` option returns name + short summary (description from frontmatter)
-- [ ] **SRCH-09**: Search results include `ALREADY LOADED SKILLS: {list}` showing skills already returned in current session
-- [ ] **SRCH-10**: Session tracking defaults to MCP connection lifecycle, supports explicit session ID override
+- [x] **SRCH-07**: `--names` option returns skill names only
+- [x] **SRCH-08**: `--summaries` option returns name + short summary (description from frontmatter)
+- [x] **SRCH-09**: Search results include `ALREADY LOADED SKILLS: {list}` showing skills already returned in current session
+- [x] **SRCH-10**: Session tracking defaults to MCP connection lifecycle, supports explicit session ID override
 
 ### Embedding Providers
 
@@ -115,10 +115,10 @@
 | SRCH-04 | Phase 1 | Complete |
 | SRCH-05 | Phase 1 | Complete |
 | SRCH-06 | Phase 1 | Complete |
-| SRCH-07 | Phase 2 | Pending |
-| SRCH-08 | Phase 2 | Pending |
-| SRCH-09 | Phase 2 | Pending |
-| SRCH-10 | Phase 2 | Pending |
+| SRCH-07 | Phase 2 | Complete |
+| SRCH-08 | Phase 2 | Complete |
+| SRCH-09 | Phase 2 | Complete |
+| SRCH-10 | Phase 2 | Complete |
 | EMB-01 | Phase 1 | Complete |
 | EMB-02 | Phase 1 | Complete |
 | EMB-03 | Phase 2 | Pending |

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-25T22:09:15.535Z"
-last_activity: 2026-03-25 -- Plan 01-05 executed (integration tests)
+status: in-progress
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-25T23:00:12Z"
+last_activity: 2026-03-25 -- Plan 02-01 executed (session-aware search)
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_plans: 8
+  completed_plans: 6
+  percent: 75
 ---
 
 # Project State
@@ -21,32 +21,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Agents can semantically search and retrieve the right skills at the right time
-**Current focus:** Phase 1: Core MCP Server
+**Current focus:** Phase 2: Search Intelligence and Embedding Providers
 
 ## Current Position
 
-Phase: 1 of 3 (Core MCP Server) -- COMPLETE
-Plan: 5 of 5 in current phase
-Status: Phase 1 Complete
-Last activity: 2026-03-25 -- Plan 01-05 executed (integration tests)
+Phase: 2 of 3 (Search Intelligence and Embedding Providers)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-03-25 -- Plan 02-01 executed (session-aware search)
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 6
 - Average duration: 6min
-- Total execution time: 0.53 hours
+- Total execution time: 0.62 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-core-mcp-server | 5 | 32min | 6min |
+| 02-search-intelligence-and-embedding-providers | 1 | 5min | 5min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (9min), 01-02 (5min), 01-03 (5min), 01-04 (4min), 01-05 (9min)
+- Last 5 plans: 01-02 (5min), 01-03 (5min), 01-04 (4min), 01-05 (9min), 02-01 (5min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -75,6 +76,9 @@ Recent decisions affecting current work:
 - [01-05]: FakeEmbeddingService uses SHA-256 hash chaining for deterministic 64-dimension test vectors
 - [01-05]: Per-test-class unique Qdrant collection names for parallel-safe test isolation
 - [01-05]: Aspire health check with REST polling fallback for Qdrant container readiness (workaround for #5768)
+- [02-01]: Keyed sessions use nested ConcurrentDictionary with __default__ sentinel for null sessionId
+- [02-01]: OutputMode parsed case-insensitively via Enum.TryParse, invalid values default to Full
+- [02-01]: Only Full output mode marks skills as loaded; Names and Summaries are read-only
 
 ### Pending Todos
 
@@ -88,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T22:09:15.519Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-search-intelligence-and-embedding-providers/02-CONTEXT.md
+Last session: 2026-03-25T23:00:12Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: .planning/phases/02-search-intelligence-and-embedding-providers/02-02-PLAN.md
