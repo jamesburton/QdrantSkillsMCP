@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-03-25T19:00:33.000Z"
-last_activity: 2026-03-25 -- Plan 01-04 executed (unit tests)
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-03-25T19:26:08.000Z"
+last_activity: 2026-03-25 -- Plan 01-05 executed (integration tests)
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State
@@ -25,29 +25,29 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 
 ## Current Position
 
-Phase: 1 of 3 (Core MCP Server)
-Plan: 4 of 5 in current phase
-Status: Executing
-Last activity: 2026-03-25 -- Plan 01-04 executed (unit tests)
+Phase: 1 of 3 (Core MCP Server) -- COMPLETE
+Plan: 5 of 5 in current phase
+Status: Phase 1 Complete
+Last activity: 2026-03-25 -- Plan 01-05 executed (integration tests)
 
-Progress: [████████░░] 80%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 6min
-- Total execution time: 0.38 hours
+- Total execution time: 0.53 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-core-mcp-server | 4 | 23min | 6min |
+| 01-core-mcp-server | 5 | 32min | 6min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (9min), 01-02 (5min), 01-03 (5min), 01-04 (4min)
-- Trend: improving
+- Last 5 plans: 01-01 (9min), 01-02 (5min), 01-03 (5min), 01-04 (4min), 01-05 (9min)
+- Trend: stable
 
 *Updated after each plan completion*
 
@@ -72,6 +72,9 @@ Recent decisions affecting current work:
 - [01-03]: Temperature-to-threshold: scoreThreshold = 1.0 - temperature
 - [01-04]: Added xunit.runner.visualstudio 3.1.5 for dotnet test discovery (xunit.v3 alone insufficient)
 - [01-04]: Extra frontmatter fields: IgnoreUnmatchedProperties drops unknown YAML keys; test validates explicit "extra" key mechanism
+- [01-05]: FakeEmbeddingService uses SHA-256 hash chaining for deterministic 64-dimension test vectors
+- [01-05]: Per-test-class unique Qdrant collection names for parallel-safe test isolation
+- [01-05]: Aspire health check with REST polling fallback for Qdrant container readiness (workaround for #5768)
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T19:00:33Z
-Stopped at: Completed 01-04-PLAN.md
-Resume file: .planning/phases/01-core-mcp-server/01-04-SUMMARY.md
+Last session: 2026-03-25T19:26:08Z
+Stopped at: Completed 01-05-PLAN.md (Phase 1 complete)
+Resume file: .planning/phases/01-core-mcp-server/01-05-SUMMARY.md
