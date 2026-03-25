@@ -15,7 +15,7 @@
 - [x] **QDR-01**: Connects to configurable Qdrant instance (default: localhost:6334)
 - [x] **QDR-02**: Uses configurable collection name (default: `skills`)
 - [x] **QDR-03**: Supports Qdrant API key for authenticated Qdrant instances
-- [ ] **QDR-04**: Auto-creates collection with correct vector dimensions on first use
+- [x] **QDR-04**: Auto-creates collection with correct vector dimensions on first use
 
 ### Skill CRUD
 
@@ -23,7 +23,7 @@
 - [ ] **CRUD-02**: `update-skill` tool updates an existing skill's content and re-generates its embedding
 - [ ] **CRUD-03**: `delete-skill` tool permanently removes a skill from the collection
 - [ ] **CRUD-04**: `archive-skill` tool soft-hides a skill without deletion (excluded from search, restorable)
-- [ ] **CRUD-05**: YAML frontmatter and markdown body are preserved losslessly through storage and retrieval round-trips
+- [x] **CRUD-05**: YAML frontmatter and markdown body are preserved losslessly through storage and retrieval round-trips
 
 ### Search & Retrieval
 
@@ -40,8 +40,8 @@
 
 ### Embedding Providers
 
-- [ ] **EMB-01**: Configurable embedding provider via `IEmbeddingGenerator` abstraction (Microsoft.Extensions.AI)
-- [ ] **EMB-02**: OpenAI embedding provider (text-embedding-3-small/large)
+- [x] **EMB-01**: Configurable embedding provider via `IEmbeddingGenerator` abstraction (Microsoft.Extensions.AI)
+- [x] **EMB-02**: OpenAI embedding provider (text-embedding-3-small/large)
 - [ ] **EMB-03**: Local ONNX embedding provider (e.g. all-MiniLM-L6-v2)
 - [ ] **EMB-04**: Ollama embedding provider (via OllamaSharp)
 - [ ] **EMB-05**: Azure OpenAI embedding provider
@@ -103,12 +103,12 @@
 | QDR-01 | Phase 1 | Complete |
 | QDR-02 | Phase 1 | Complete |
 | QDR-03 | Phase 1 | Complete |
-| QDR-04 | Phase 1 | Pending |
+| QDR-04 | Phase 1 | Complete |
 | CRUD-01 | Phase 1 | Pending |
 | CRUD-02 | Phase 1 | Pending |
 | CRUD-03 | Phase 1 | Pending |
 | CRUD-04 | Phase 1 | Pending |
-| CRUD-05 | Phase 1 | Pending |
+| CRUD-05 | Phase 1 | Complete |
 | SRCH-01 | Phase 1 | Pending |
 | SRCH-02 | Phase 1 | Pending |
 | SRCH-03 | Phase 1 | Pending |
@@ -119,8 +119,8 @@
 | SRCH-08 | Phase 2 | Pending |
 | SRCH-09 | Phase 2 | Pending |
 | SRCH-10 | Phase 2 | Pending |
-| EMB-01 | Phase 1 | Pending |
-| EMB-02 | Phase 1 | Pending |
+| EMB-01 | Phase 1 | Complete |
+| EMB-02 | Phase 1 | Complete |
 | EMB-03 | Phase 2 | Pending |
 | EMB-04 | Phase 2 | Pending |
 | EMB-05 | Phase 2 | Pending |
