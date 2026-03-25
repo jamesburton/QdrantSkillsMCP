@@ -12,9 +12,9 @@
 
 ### Qdrant Connection
 
-- [ ] **QDR-01**: Connects to configurable Qdrant instance (default: localhost:6334)
-- [ ] **QDR-02**: Uses configurable collection name (default: `skills`)
-- [ ] **QDR-03**: Supports Qdrant API key for authenticated Qdrant instances
+- [x] **QDR-01**: Connects to configurable Qdrant instance (default: localhost:6334)
+- [x] **QDR-02**: Uses configurable collection name (default: `skills`)
+- [x] **QDR-03**: Supports Qdrant API key for authenticated Qdrant instances
 - [ ] **QDR-04**: Auto-creates collection with correct vector dimensions on first use
 
 ### Skill CRUD
@@ -60,7 +60,7 @@
 ### Distribution & Dev Experience
 
 - [ ] **DIST-01**: Packaged as NuGet tool, invocable via `dnx QdrantSkillsMCP`
-- [ ] **DIST-02**: Aspire v13.2 AppHost runs Qdrant via Aspire integration for local development
+- [x] **DIST-02**: Aspire v13.2 AppHost runs Qdrant via Aspire integration for local development
 - [ ] **DIST-03**: Full XUnit v3 (MTP) test coverage using Aspire testing framework
 
 ### Bundled Skill
@@ -100,9 +100,9 @@
 |-------------|-------|--------|
 | MCP-01 | Phase 1 | Pending |
 | MCP-02 | Phase 1 | Pending |
-| QDR-01 | Phase 1 | Pending |
-| QDR-02 | Phase 1 | Pending |
-| QDR-03 | Phase 1 | Pending |
+| QDR-01 | Phase 1 | Complete |
+| QDR-02 | Phase 1 | Complete |
+| QDR-03 | Phase 1 | Complete |
 | QDR-04 | Phase 1 | Pending |
 | CRUD-01 | Phase 1 | Pending |
 | CRUD-02 | Phase 1 | Pending |
@@ -133,7 +133,7 @@
 | CLI-06 | Phase 3 | Pending |
 | CLI-07 | Phase 3 | Pending |
 | DIST-01 | Phase 3 | Pending |
-| DIST-02 | Phase 1 | Pending |
+| DIST-02 | Phase 1 | Complete |
 | DIST-03 | Phase 1 | Pending |
 | BSKL-01 | Phase 3 | Pending |
 | BSKL-02 | Phase 3 | Pending |
