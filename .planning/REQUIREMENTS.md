@@ -45,7 +45,7 @@
 - [x] **EMB-03**: Local ONNX embedding provider (e.g. all-MiniLM-L6-v2)
 - [x] **EMB-04**: Ollama embedding provider (via OllamaSharp)
 - [x] **EMB-05**: Azure OpenAI embedding provider
-- [ ] **EMB-06**: Embedding dimension validation on startup (detects mismatches when switching providers)
+- [x] **EMB-06**: Embedding dimension validation on startup (detects mismatches when switching providers)
 
 ### CLI
 
@@ -124,7 +124,7 @@
 | EMB-03 | Phase 2 | Complete |
 | EMB-04 | Phase 2 | Complete |
 | EMB-05 | Phase 2 | Complete |
-| EMB-06 | Phase 2 | Pending |
+| EMB-06 | Phase 2 | Complete |
 | CLI-01 | Phase 3 | Pending |
 | CLI-02 | Phase 3 | Pending |
 | CLI-03 | Phase 3 | Pending |

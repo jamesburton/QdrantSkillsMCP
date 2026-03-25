@@ -13,7 +13,7 @@ QdrantSkillsMCP goes from zero to a fully packaged MCP server in three phases. P
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Core MCP Server** - Working MCP server with Qdrant storage, full skill CRUD, semantic search, and test infrastructure
-- [ ] **Phase 2: Search Intelligence and Embedding Providers** - Session tracking, output modes, and pluggable embedding providers with dimension safety
+- [x] **Phase 2: Search Intelligence and Embedding Providers** - Session tracking, output modes, and pluggable embedding providers with dimension safety
 - [ ] **Phase 3: CLI, Distribution, and Bundled Skill** - Console mode, multi-agent setup wizard, bundled SKILL.md, and NuGet tool packaging
 
 ## Phase Details
@@ -50,8 +50,8 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md -- Search intelligence: output modes, keyed session tracking, sessionId param, reset-session tool
-- [ ] 02-02-PLAN.md -- Embedding providers: ONNX, Ollama, Azure OpenAI services + provider selection + AppHost
-- [ ] 02-03-PLAN.md -- Dimension validation IHostedService + integration tests for Phase 2
+- [x] 02-02-PLAN.md -- Embedding providers: ONNX, Ollama, Azure OpenAI services + provider selection + AppHost
+- [x] 02-03-PLAN.md -- Dimension validation IHostedService + integration tests for Phase 2
 
 ### Phase 3: CLI, Distribution, and Bundled Skill
 **Goal**: Users can install via dnx, configure any supported agent in one command, and agents learn to use the server from its bundled skill
@@ -76,5 +76,5 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
-| 2. Search Intelligence and Embedding Providers | 1/3 | In progress | - |
+| 2. Search Intelligence and Embedding Providers | 3/3 | Complete | 2026-03-25 |
 | 3. CLI, Distribution, and Bundled Skill | 0/2 | Not started | - |
