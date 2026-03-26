@@ -32,4 +32,10 @@
     <InternalsVisibleTo Include="QdrantSkillsMCP.UnitTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="SkillGuide\SKILL.md" />
+    <EmbeddedResource Include="SkillGuide\FrequentSkills.md" />
+    <EmbeddedResource Include="SkillGuide\EnableSkillSearch.md" />
+  </ItemGroup>
+
 </Project>

@@ -237,7 +237,7 @@ public sealed class SetupWizard
 
         var assembly = typeof(SetupWizard).Assembly;
         using var stream = assembly.GetManifestResourceStream(
-            "QdrantSkillsMCP.Infrastructure.Skill.SKILL.md");
+            "QdrantSkillsMCP.Infrastructure.SkillGuide.SKILL.md");
 
         if (stream is null)
         {
