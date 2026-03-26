@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 03-03-PLAN.md (bundled skill and NuGet packaging)
-last_updated: "2026-03-26T01:17:00Z"
-last_activity: 2026-03-26 -- Plan 03-03 executed (bundled skill, FrequentSkills, NuGet packaging)
+stopped_at: Completed 03-04-PLAN.md (setup DI wiring gap closure)
+last_updated: "2026-03-26T01:44:42Z"
+last_activity: 2026-03-26 -- Plan 03-04 executed (setup DI wiring gap closure)
 progress:
   total_phases: 3
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 12
+  completed_plans: 12
   percent: 100
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Agents can semantically search and retrieve the right skills at the right time
-**Current focus:** All phases complete -- v1.0 milestone achieved
+**Current focus:** All phases complete (including gap closures) -- v1.0 milestone achieved
 
 ## Current Position
 
 Phase: 3 of 3 (CLI, Distribution, and Bundled Skill)
-Plan: 3 of 3 in current phase -- COMPLETE
+Plan: 4 of 4 in current phase -- COMPLETE (includes gap closure plan)
 Status: Phase 3 Complete -- All Phases Complete
-Last activity: 2026-03-26 -- Plan 03-03 executed (bundled skill, FrequentSkills, NuGet packaging)
+Last activity: 2026-03-26 -- Plan 03-04 executed (setup DI wiring gap closure)
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 7min
-- Total execution time: 1.27 hours
+- Total execution time: 1.33 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [██████████] 100%
 |-------|-------|-------|----------|
 | 01-core-mcp-server | 5 | 32min | 6min |
 | 02-search-intelligence-and-embedding-providers | 3 | 23min | 8min |
-| 03-cli-distribution-and-bundled-skill | 3/3 | 31min | 10min |
+| 03-cli-distribution-and-bundled-skill | 4/4 | 35min | 9min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (5min), 02-02 (8min), 02-03 (10min), 03-02 (11min), 03-03 (10min)
+- Last 5 plans: 02-02 (8min), 02-03 (10min), 03-02 (11min), 03-03 (10min), 03-04 (4min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -98,6 +98,8 @@ Recent decisions affecting current work:
 - [03-03]: SkillGuide folder name instead of Skill to avoid namespace conflict with Core.Models.Skill
 - [03-03]: FrequentSkillsService uses constructor-injected userDir for testability (defaults to ~/.qdrant-skills/)
 - [03-03]: Embedded resources use SkillGuide subfolder: QdrantSkillsMCP.Infrastructure.SkillGuide.SKILL.md
+- [03-04]: AddSetupServices is separate from AddQdrantSkillsInfrastructure to avoid Qdrant dependency in setup mode
+- [03-04]: SetupWizard resolved via GetRequiredService from host.Services in Program.cs
 
 ### Pending Todos
 
@@ -111,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T01:17:00Z
-Stopped at: Completed 03-03-PLAN.md (bundled skill and NuGet packaging)
-Resume file: All plans complete
+Last session: 2026-03-26T01:44:42Z
+Stopped at: Completed 03-04-PLAN.md (setup DI wiring gap closure)
+Resume file: All plans complete (including gap closures)
