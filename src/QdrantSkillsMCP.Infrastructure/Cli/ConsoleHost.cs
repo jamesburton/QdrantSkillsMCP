@@ -35,9 +35,8 @@ public sealed class ConsoleHost
         // No subcommand -> REPL
         if (remaining.Count == 0)
         {
-            // ReplLoop will be wired in Task 2
-            Console.WriteLine("REPL not yet implemented");
-            return 0;
+            var repl = new ReplLoop(_services, formatter);
+            return await repl.RunAsync(ct);
         }
 
         var command = remaining[0].ToLowerInvariant();

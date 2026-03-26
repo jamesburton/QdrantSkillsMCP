@@ -9,6 +9,7 @@ using Xunit;
 
 namespace QdrantSkillsMCP.UnitTests.Cli;
 
+[Collection("ConsoleOutput")]
 public class ConsoleHostTests : IDisposable
 {
     private readonly ISkillRepository _repo;
