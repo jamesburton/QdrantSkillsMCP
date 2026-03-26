@@ -4,6 +4,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>QdrantSkillsMCP.Infrastructure</RootNamespace>
     <NoWarn>$(NoWarn);SKEXP0070</NoWarn>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>qdrant-skills-mcp</ToolCommandName>
+    <PackageId>QdrantSkillsMCP</PackageId>
+    <Description>MCP server for semantic skill search and retrieval using Qdrant</Description>
+    <PackageOutputPath>./nupkg</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +19,8 @@
     <PackageReference Include="OllamaSharp" Version="5.4.25" />
     <PackageReference Include="Qdrant.Client" Version="1.17.0" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.*" />
+    <PackageReference Include="Spectre.Console" Version="0.54.0" />
+    <PackageReference Include="Tomlyn" Version="0.17.0" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
