@@ -15,6 +15,8 @@ using QdrantSkillsMCP.Infrastructure.Configuration;
 using QdrantSkillsMCP.Infrastructure.Embedding;
 using QdrantSkillsMCP.Infrastructure.Qdrant;
 using QdrantSkillsMCP.Infrastructure.Session;
+using QdrantSkillsMCP.Infrastructure.Setup;
+using QdrantSkillsMCP.Infrastructure.Setup.Writers;
 using QdrantSkillsMCP.Infrastructure.Yaml;
 
 namespace QdrantSkillsMCP.Infrastructure;
@@ -24,6 +26,30 @@ namespace QdrantSkillsMCP.Infrastructure;
 /// </summary>
 public static class ServiceRegistration
 {
+    /// <summary>
+    /// Registers setup-mode services (SetupWizard, AgentDetector, config writers).
+    /// Intentionally does NOT register Qdrant infrastructure — setup needs no Qdrant connection.
+    /// </summary>
+    public static IServiceCollection AddSetupServices(this IServiceCollection services)
+    {
+        // Config writers (all 9 implementations)
+        services.AddSingleton<IAgentConfigWriter, ClaudeConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, ClaudeDesktopConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, CopilotConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, CopilotCliConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, CodexConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, OpenCodeConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, KiloCodeConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, FactoryDroidConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, SnippetFallbackWriter>();
+
+        // Detector and wizard
+        services.AddSingleton<AgentDetector>();
+        services.AddSingleton<SetupWizard>();
+
+        return services;
+    }
+
     /// <summary>
     /// Registers all QdrantSkills infrastructure services in the DI container.
     /// </summary>

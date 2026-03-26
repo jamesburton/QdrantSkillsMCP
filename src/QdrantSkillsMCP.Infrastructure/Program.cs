@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using QdrantSkillsMCP.Infrastructure;
 using QdrantSkillsMCP.Infrastructure.Cli;
+using QdrantSkillsMCP.Infrastructure.Setup;
 
 // Mode branching: --console, --setup, or default MCP server
 if (args.Contains("--console"))
@@ -21,11 +22,14 @@ if (args.Contains("--console"))
 }
 else if (args.Contains("--setup"))
 {
-    // Setup wizard mode: placeholder for Plan 02
-    // Does NOT register infrastructure services (setup doesn't need Qdrant connection)
+    // Setup wizard mode: registers only setup services (no Qdrant connection needed)
     var builder = Host.CreateApplicationBuilder(args);
-    Console.WriteLine("Setup wizard not yet implemented. Coming in a future update.");
-    Environment.Exit(0);
+    builder.Services.AddSetupServices();
+
+    var host = builder.Build();
+    var wizard = host.Services.GetRequiredService<SetupWizard>();
+    var exitCode = await wizard.RunAsync(args);
+    Environment.Exit(exitCode);
 }
 else
 {
