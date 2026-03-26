@@ -49,8 +49,8 @@
 
 ### CLI
 
-- [ ] **CLI-01**: `--console` flag enables CLI mode with single-shot subcommands and JSON output
-- [ ] **CLI-02**: `--console` without subcommand enters interactive REPL mode
+- [x] **CLI-01**: `--console` flag enables CLI mode with single-shot subcommands and JSON output
+- [x] **CLI-02**: `--console` without subcommand enters interactive REPL mode
 - [x] **CLI-03**: `--setup` command auto-configures MCP server entry in agent config files
 - [x] **CLI-04**: `--setup` supports claude, copilot, codex, opencode, docker-agent, kilocode, factory-droid and other detected agents
 - [x] **CLI-05**: `--setup` auto-writes config where possible, falls back to snippets when format unknown
@@ -125,8 +125,8 @@
 | EMB-04 | Phase 2 | Complete |
 | EMB-05 | Phase 2 | Complete |
 | EMB-06 | Phase 2 | Complete |
-| CLI-01 | Phase 3 | Pending |
-| CLI-02 | Phase 3 | Pending |
+| CLI-01 | Phase 3 | Complete |
+| CLI-02 | Phase 3 | Complete |
 | CLI-03 | Phase 3 | Complete |
 | CLI-04 | Phase 3 | Complete |
 | CLI-05 | Phase 3 | Complete |

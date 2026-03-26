@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 03-02-PLAN.md (setup wizard)
-last_updated: "2026-03-26T01:01:00Z"
-last_activity: 2026-03-26 -- Plan 03-02 executed (setup wizard with agent config writers)
+stopped_at: Completed 03-01-PLAN.md (console CLI mode)
+last_updated: "2026-03-26T01:03:00Z"
+last_activity: 2026-03-26 -- Plan 03-01 executed (console CLI with REPL and mode branching)
 progress:
   total_phases: 3
   completed_phases: 2
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-25)
 Phase: 3 of 3 (CLI, Distribution, and Bundled Skill)
 Plan: 2 of 3 in current phase -- COMPLETE
 Status: Phase 3 In Progress
-Last activity: 2026-03-26 -- Plan 03-02 executed (setup wizard with agent config writers)
+Last activity: 2026-03-26 -- Plan 03-01 executed (console CLI with REPL and mode branching)
 
 Progress: [█████████░] 91%
 
@@ -92,6 +92,9 @@ Recent decisions affecting current work:
 - [03-02]: opencode uses command-as-array format with 'mcp' root key
 - [03-02]: Only Claude Code has SkillDirectoryPath; other agents rely on get-skill-guide MCP tool
 - [03-02]: Codex uses Tomlyn for TOML read-modify-write (not hand-rolled)
+- [03-01]: AnsiConsole.Create() per-call with AnsiConsoleOutput(Console.Out) for testable Spectre.Console output
+- [03-01]: Collection attribute on CLI test classes prevents Console.Out race conditions in parallel test runs
+- [03-01]: ReplLoop.ProcessCommandAsync extracted as public method for unit testing without Console I/O
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T01:01:00Z
-Stopped at: Completed 03-02-PLAN.md (setup wizard)
+Last session: 2026-03-26T01:03:00Z
+Stopped at: Completed 03-01-PLAN.md (console CLI mode)
 Resume file: .planning/phases/03-cli-distribution-and-bundled-skill/03-03-PLAN.md
