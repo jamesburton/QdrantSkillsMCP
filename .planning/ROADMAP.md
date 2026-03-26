@@ -62,11 +62,12 @@ Plans:
   2. `dnx QdrantSkillsMCP --setup` detects installed agents (Claude, Copilot, Codex, etc.) and writes correct MCP config entries, with backup and fallback to manual snippets
   3. The bundled SKILL.md teaches an agent how to use QdrantSkillsMCP and includes a curated short-list of frequently used skills
   4. The NuGet tool package installs and runs correctly via `dnx QdrantSkillsMCP`
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Console CLI mode: Program.cs mode branching, ConsoleHost, subcommands, REPL
+- [ ] 03-02-PLAN.md -- Setup wizard: agent detection, config writers, interactive/non-interactive flows
+- [ ] 03-03-PLAN.md -- Bundled SKILL.md, FrequentSkills system, get-skill-guide MCP tool, NuGet packaging
 
 ## Progress
 
@@ -77,4 +78,4 @@ Phases execute in numeric order: 1 -> 2 -> 3
 |-------|----------------|--------|-----------|
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
 | 2. Search Intelligence and Embedding Providers | 3/3 | Complete | 2026-03-25 |
-| 3. CLI, Distribution, and Bundled Skill | 0/2 | Not started | - |
+| 3. CLI, Distribution, and Bundled Skill | 0/3 | Not started | - |
