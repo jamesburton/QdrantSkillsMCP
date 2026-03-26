@@ -38,18 +38,18 @@ created: 2026-03-26
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 03-01-01 | 01 | 1 | CLI-01 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~ConsoleHost" -x` | ❌ W0 | ⬜ pending |
-| 03-01-02 | 01 | 1 | CLI-02 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~ReplLoop" -x` | ❌ W0 | ⬜ pending |
-| 03-02-01 | 02 | 1 | CLI-03 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~ConfigWriter" -x` | ❌ W0 | ⬜ pending |
-| 03-02-02 | 02 | 1 | CLI-04 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~AgentDetector" -x` | ❌ W0 | ⬜ pending |
-| 03-02-03 | 02 | 1 | CLI-05 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~SnippetFallback" -x` | ❌ W0 | ⬜ pending |
-| 03-02-04 | 02 | 1 | CLI-06 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~ConfigWriter" -x` | ❌ W0 | ⬜ pending |
-| 03-02-05 | 02 | 1 | CLI-07 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~SetupWizard" -x` | ❌ W0 | ⬜ pending |
-| 03-03-01 | 03 | 2 | BSKL-01 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~SkillGuide" -x` | ❌ W0 | ⬜ pending |
-| 03-03-02 | 03 | 2 | BSKL-02 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~FrequentSkills" -x` | ❌ W0 | ⬜ pending |
-| 03-04-01 | 04 | 2 | DIST-01 | integration | `dotnet pack src/QdrantSkillsMCP.Infrastructure -c Release` | ❌ W0 | ⬜ pending |
+| 03-01-01 | 01 | 1 | CLI-01 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~ConsoleHost" -x` | W0 | pending |
+| 03-01-02 | 01 | 1 | CLI-02 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~ReplLoop" -x` | W0 | pending |
+| 03-02-01 | 02 | 1 | CLI-03 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~ConfigWriter" -x` | W0 | pending |
+| 03-02-02 | 02 | 1 | CLI-04 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~AgentDetector" -x` | W0 | pending |
+| 03-02-03 | 02 | 1 | CLI-05 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~SnippetFallback" -x` | W0 | pending |
+| 03-02-04 | 02 | 1 | CLI-06 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~ConfigWriter" -x` | W0 | pending |
+| 03-02-05 | 02 | 1 | CLI-07 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~SetupWizard" -x` | W0 | pending |
+| 03-03-01 | 03 | 2 | BSKL-01 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~SkillGuide" -x` | W0 | pending |
+| 03-03-02 | 03 | 2 | BSKL-02 | unit | `dotnet test tests/QdrantSkillsMCP.UnitTests --filter "FullyQualifiedName~FrequentSkills" -x` | W0 | pending |
+| 03-03-03 | 03 | 2 | DIST-01 | integration | `dotnet pack src/QdrantSkillsMCP.Infrastructure -c Release` | W0 | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 

@@ -79,12 +79,6 @@ Console CLI mode (`--console`) with single-shot subcommands and interactive REPL
 - Add `PackAsTool` and `ToolCommandName` to existing Infrastructure.csproj (no new project)
 - Portable / framework-dependent (requires .NET 10 runtime)
 
-### ONNX model packaging
-- Separate companion NuGet package: `QdrantSkillsMCP.Models.DefaultEmbedding`
-- Ships the default ONNX model (all-MiniLM-L6-v2 or similar)
-- Main package auto-downloads from HuggingFace on first use if companion not installed
-- Users install both packages for zero-download offline experience
-
 ### Claude's Discretion
 - REPL library choice (Spectre.Console, ReadLine, or custom)
 - Tab completion implementation for skill names in REPL
@@ -131,6 +125,7 @@ Console CLI mode (`--console`) with single-shot subcommands and interactive REPL
 
 - **Frequent skills sync to Qdrant or shared repo** — potential future enhancement for team-level skill sharing beyond git-committed FrequentSkills.md
 - **skills-guru integration** — already tracked as v2 requirement (ECO-01, ECO-02)
+- **ONNX companion NuGet package (`QdrantSkillsMCP.Models.DefaultEmbedding`)** — deferred because the RESEARCH.md flags the contentFiles discovery mechanism as an open question. The auto-download from HuggingFace (already implemented in Phase 2) provides a working fallback. Will revisit when the NuGet contentFiles approach is validated.
 
 </deferred>
 
