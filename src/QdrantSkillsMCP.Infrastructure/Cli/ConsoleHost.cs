@@ -42,18 +42,28 @@ public sealed class ConsoleHost
         var command = remaining[0].ToLowerInvariant();
         var commandArgs = remaining.Skip(1).ToArray();
 
-        return command switch
+        try
         {
-            "search" => await SearchCommand.RunAsync(_services, commandArgs, formatter, ct),
-            "list" => await ListCommand.RunAsync(_services, formatter, ct),
-            "load" => await LoadCommand.RunAsync(_services, commandArgs, formatter, ct),
-            "add" => await CrudCommands.AddAsync(_services, commandArgs, ct),
-            "update" => await CrudCommands.UpdateAsync(_services, commandArgs, ct),
-            "delete" => await CrudCommands.DeleteAsync(_services, commandArgs, ct),
-            "archive" => await CrudCommands.ArchiveAsync(_services, commandArgs, ct),
-            "status" or "info" => await StatusCommand.RunAsync(_services, formatter, ct),
-            _ => UnknownCommand(command)
-        };
+            return command switch
+            {
+                "search" => await SearchCommand.RunAsync(_services, commandArgs, formatter, ct),
+                "list" => await ListCommand.RunAsync(_services, formatter, ct),
+                "load" => await LoadCommand.RunAsync(_services, commandArgs, formatter, ct),
+                "add" => await CrudCommands.AddAsync(_services, commandArgs, ct),
+                "update" => await CrudCommands.UpdateAsync(_services, commandArgs, ct),
+                "delete" => await CrudCommands.DeleteAsync(_services, commandArgs, ct),
+                "archive" => await CrudCommands.ArchiveAsync(_services, commandArgs, ct),
+                "status" or "info" => await StatusCommand.RunAsync(_services, formatter, ct),
+                _ => UnknownCommand(command)
+            };
+        }
+        catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.Unavailable)
+        {
+            Console.Error.WriteLine("Error: Could not connect to Qdrant.");
+            Console.Error.WriteLine("Make sure Qdrant is running (default: localhost:6334).");
+            Console.Error.WriteLine("Start it with: dotnet run --project src/QdrantSkillsMCP.AppHost");
+            return 1;
+        }
     }
 
     private static int UnknownCommand(string command)
