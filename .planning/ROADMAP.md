@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Core MCP Server** - Working MCP server with Qdrant storage, full skill CRUD, semantic search, and test infrastructure
 - [x] **Phase 2: Search Intelligence and Embedding Providers** - Session tracking, output modes, and pluggable embedding providers with dimension safety
-- [x] **Phase 3: CLI, Distribution, and Bundled Skill** - Console mode, multi-agent setup wizard, bundled SKILL.md, and NuGet tool packaging
+- [ ] **Phase 3: CLI, Distribution, and Bundled Skill** - Console mode, multi-agent setup wizard, bundled SKILL.md, and NuGet tool packaging
 
 ## Phase Details
 
@@ -62,12 +62,13 @@ Plans:
   2. `dnx QdrantSkillsMCP --setup` detects installed agents (Claude, Copilot, Codex, etc.) and writes correct MCP config entries, with backup and fallback to manual snippets
   3. The bundled SKILL.md teaches an agent how to use QdrantSkillsMCP and includes a curated short-list of frequently used skills
   4. The NuGet tool package installs and runs correctly via `dnx QdrantSkillsMCP`
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [x] 03-01-PLAN.md -- Console CLI mode: Program.cs mode branching, ConsoleHost, subcommands, REPL
 - [x] 03-02-PLAN.md -- Setup wizard: agent detection, config writers, interactive/non-interactive flows
 - [x] 03-03-PLAN.md -- Bundled SKILL.md, FrequentSkills system, get-skill-guide MCP tool, NuGet packaging
+- [ ] 03-04-PLAN.md -- Gap closure: wire SetupWizard DI registration and Program.cs --setup branch
 
 ## Progress
 
@@ -78,4 +79,4 @@ Phases execute in numeric order: 1 -> 2 -> 3
 |-------|----------------|--------|-----------|
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
 | 2. Search Intelligence and Embedding Providers | 3/3 | Complete | 2026-03-25 |
-| 3. CLI, Distribution, and Bundled Skill | 3/3 | Complete | 2026-03-26 |
+| 3. CLI, Distribution, and Bundled Skill | 3/4 | Gap Closure | - |
