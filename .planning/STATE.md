@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 03-01-PLAN.md (console CLI mode)
-last_updated: "2026-03-26T01:03:00Z"
-last_activity: 2026-03-26 -- Plan 03-01 executed (console CLI with REPL and mode branching)
+stopped_at: Completed 03-03-PLAN.md (bundled skill and NuGet packaging)
+last_updated: "2026-03-26T01:17:00Z"
+last_activity: 2026-03-26 -- Plan 03-03 executed (bundled skill, FrequentSkills, NuGet packaging)
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 10
-  percent: 91
+  completed_plans: 11
+  percent: 100
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Agents can semantically search and retrieve the right skills at the right time
-**Current focus:** Phase 3 in progress: CLI, Distribution, and Bundled Skill
+**Current focus:** All phases complete -- v1.0 milestone achieved
 
 ## Current Position
 
 Phase: 3 of 3 (CLI, Distribution, and Bundled Skill)
-Plan: 2 of 3 in current phase -- COMPLETE
-Status: Phase 3 In Progress
-Last activity: 2026-03-26 -- Plan 03-01 executed (console CLI with REPL and mode branching)
+Plan: 3 of 3 in current phase -- COMPLETE
+Status: Phase 3 Complete -- All Phases Complete
+Last activity: 2026-03-26 -- Plan 03-03 executed (bundled skill, FrequentSkills, NuGet packaging)
 
-Progress: [█████████░] 91%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
+- Total plans completed: 11
 - Average duration: 7min
-- Total execution time: 1.10 hours
+- Total execution time: 1.27 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [█████████░] 91%
 |-------|-------|-------|----------|
 | 01-core-mcp-server | 5 | 32min | 6min |
 | 02-search-intelligence-and-embedding-providers | 3 | 23min | 8min |
-| 03-cli-distribution-and-bundled-skill | 2/3 | 21min | 11min |
+| 03-cli-distribution-and-bundled-skill | 3/3 | 31min | 10min |
 
 **Recent Trend:**
-- Last 5 plans: 01-05 (9min), 02-01 (5min), 02-02 (8min), 02-03 (10min), 03-02 (11min)
+- Last 5 plans: 02-01 (5min), 02-02 (8min), 02-03 (10min), 03-02 (11min), 03-03 (10min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -95,6 +95,9 @@ Recent decisions affecting current work:
 - [03-01]: AnsiConsole.Create() per-call with AnsiConsoleOutput(Console.Out) for testable Spectre.Console output
 - [03-01]: Collection attribute on CLI test classes prevents Console.Out race conditions in parallel test runs
 - [03-01]: ReplLoop.ProcessCommandAsync extracted as public method for unit testing without Console I/O
+- [03-03]: SkillGuide folder name instead of Skill to avoid namespace conflict with Core.Models.Skill
+- [03-03]: FrequentSkillsService uses constructor-injected userDir for testability (defaults to ~/.qdrant-skills/)
+- [03-03]: Embedded resources use SkillGuide subfolder: QdrantSkillsMCP.Infrastructure.SkillGuide.SKILL.md
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T01:03:00Z
-Stopped at: Completed 03-01-PLAN.md (console CLI mode)
-Resume file: .planning/phases/03-cli-distribution-and-bundled-skill/03-03-PLAN.md
+Last session: 2026-03-26T01:17:00Z
+Stopped at: Completed 03-03-PLAN.md (bundled skill and NuGet packaging)
+Resume file: All plans complete

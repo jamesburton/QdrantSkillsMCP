@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Core MCP Server** - Working MCP server with Qdrant storage, full skill CRUD, semantic search, and test infrastructure
 - [x] **Phase 2: Search Intelligence and Embedding Providers** - Session tracking, output modes, and pluggable embedding providers with dimension safety
-- [ ] **Phase 3: CLI, Distribution, and Bundled Skill** - Console mode, multi-agent setup wizard, bundled SKILL.md, and NuGet tool packaging
+- [x] **Phase 3: CLI, Distribution, and Bundled Skill** - Console mode, multi-agent setup wizard, bundled SKILL.md, and NuGet tool packaging
 
 ## Phase Details
 
@@ -65,9 +65,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Console CLI mode: Program.cs mode branching, ConsoleHost, subcommands, REPL
-- [ ] 03-02-PLAN.md -- Setup wizard: agent detection, config writers, interactive/non-interactive flows
-- [ ] 03-03-PLAN.md -- Bundled SKILL.md, FrequentSkills system, get-skill-guide MCP tool, NuGet packaging
+- [x] 03-01-PLAN.md -- Console CLI mode: Program.cs mode branching, ConsoleHost, subcommands, REPL
+- [x] 03-02-PLAN.md -- Setup wizard: agent detection, config writers, interactive/non-interactive flows
+- [x] 03-03-PLAN.md -- Bundled SKILL.md, FrequentSkills system, get-skill-guide MCP tool, NuGet packaging
 
 ## Progress
 
@@ -78,4 +78,4 @@ Phases execute in numeric order: 1 -> 2 -> 3
 |-------|----------------|--------|-----------|
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
 | 2. Search Intelligence and Embedding Providers | 3/3 | Complete | 2026-03-25 |
-| 3. CLI, Distribution, and Bundled Skill | 1/3 | In Progress|  |
+| 3. CLI, Distribution, and Bundled Skill | 3/3 | Complete | 2026-03-26 |

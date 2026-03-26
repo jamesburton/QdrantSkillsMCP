@@ -59,14 +59,14 @@
 
 ### Distribution & Dev Experience
 
-- [ ] **DIST-01**: Packaged as NuGet tool, invocable via `dnx QdrantSkillsMCP`
+- [x] **DIST-01**: Packaged as NuGet tool, invocable via `dnx QdrantSkillsMCP`
 - [x] **DIST-02**: Aspire v13.2 AppHost runs Qdrant via Aspire integration for local development
 - [x] **DIST-03**: Full XUnit v3 (MTP) test coverage using Aspire testing framework
 
 ### Bundled Skill
 
-- [ ] **BSKL-01**: Ships with a SKILL.md that teaches agents how to use QdrantSkillsMCP effectively
-- [ ] **BSKL-02**: Bundled skill includes curated short-list of frequently used skills to reduce search calls
+- [x] **BSKL-01**: Ships with a SKILL.md that teaches agents how to use QdrantSkillsMCP effectively
+- [x] **BSKL-02**: Bundled skill includes curated short-list of frequently used skills to reduce search calls
 
 ## v2 Requirements
 
@@ -132,11 +132,11 @@
 | CLI-05 | Phase 3 | Complete |
 | CLI-06 | Phase 3 | Complete |
 | CLI-07 | Phase 3 | Complete |
-| DIST-01 | Phase 3 | Pending |
+| DIST-01 | Phase 3 | Complete |
 | DIST-02 | Phase 1 | Complete |
 | DIST-03 | Phase 1 | Complete |
-| BSKL-01 | Phase 3 | Pending |
-| BSKL-02 | Phase 3 | Pending |
+| BSKL-01 | Phase 3 | Complete |
+| BSKL-02 | Phase 3 | Complete |
 
 **Coverage:**
 - v1 requirements: 39 total
