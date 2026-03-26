@@ -226,4 +226,184 @@ public sealed class ConfigWriterTests : IDisposable
     }
 
     #endregion
+
+    #region CodexConfigWriter
+
+    [Fact]
+    public async Task CodexWriter_WritesTomlFormat()
+    {
+        var writer = new CodexConfigWriter();
+        var configPath = Path.Combine(_tempDir, "config.toml");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var toml = await File.ReadAllTextAsync(configPath);
+        Assert.Contains("[mcp_servers.qdrant-skills-mcp]", toml);
+        Assert.Contains("command", toml);
+        Assert.Contains("dnx", toml);
+    }
+
+    [Fact]
+    public async Task CodexWriter_MergesWithExistingToml()
+    {
+        var writer = new CodexConfigWriter();
+        var configPath = Path.Combine(_tempDir, "config.toml");
+        await File.WriteAllTextAsync(configPath, """
+            [mcp_servers.other-server]
+            command = "other-cmd"
+            args = ["arg1"]
+            """);
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var toml = await File.ReadAllTextAsync(configPath);
+        Assert.Contains("other-server", toml);
+        Assert.Contains("qdrant-skills-mcp", toml);
+    }
+
+    [Fact]
+    public async Task CodexWriter_CreatesBackup()
+    {
+        var writer = new CodexConfigWriter();
+        var configPath = Path.Combine(_tempDir, "config.toml");
+        await File.WriteAllTextAsync(configPath, "[existing]\nkey = \"value\"\n");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        Assert.True(File.Exists(configPath + ".bak"));
+    }
+
+    [Fact]
+    public void CodexWriter_SkillDirectoryPath_IsNull()
+    {
+        var writer = new CodexConfigWriter();
+        Assert.Null(writer.SkillDirectoryPath);
+    }
+
+    #endregion
+
+    #region OpenCodeConfigWriter
+
+    [Fact]
+    public async Task OpenCodeWriter_UsesMcpRootKeyWithCommandArray()
+    {
+        var writer = new OpenCodeConfigWriter();
+        var configPath = Path.Combine(_tempDir, "opencode.json");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var json = JsonNode.Parse(await File.ReadAllTextAsync(configPath))!;
+        Assert.NotNull(json["mcp"]);
+        Assert.NotNull(json["mcp"]!["qdrant-skills-mcp"]);
+
+        // command should be an array ["dnx", "qdrant-skills-mcp"]
+        var command = json["mcp"]!["qdrant-skills-mcp"]!["command"]!.AsArray();
+        Assert.Equal(2, command.Count);
+        Assert.Equal("dnx", command[0]!.GetValue<string>());
+        Assert.Equal("qdrant-skills-mcp", command[1]!.GetValue<string>());
+        Assert.Equal("local", json["mcp"]!["qdrant-skills-mcp"]!["type"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void OpenCodeWriter_SkillDirectoryPath_IsNull()
+    {
+        var writer = new OpenCodeConfigWriter();
+        Assert.Null(writer.SkillDirectoryPath);
+    }
+
+    #endregion
+
+    #region KiloCodeConfigWriter
+
+    [Fact]
+    public async Task KiloCodeWriter_UsesMcpServersKey()
+    {
+        var writer = new KiloCodeConfigWriter();
+        var configPath = Path.Combine(_tempDir, "mcp_settings.json");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var json = JsonNode.Parse(await File.ReadAllTextAsync(configPath))!;
+        Assert.NotNull(json["mcpServers"]!["qdrant-skills-mcp"]);
+        Assert.Equal("dnx", json["mcpServers"]!["qdrant-skills-mcp"]!["command"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void KiloCodeWriter_SkillDirectoryPath_IsNull()
+    {
+        var writer = new KiloCodeConfigWriter();
+        Assert.Null(writer.SkillDirectoryPath);
+    }
+
+    #endregion
+
+    #region FactoryDroidConfigWriter
+
+    [Fact]
+    public async Task FactoryDroidWriter_HasTypeStdio()
+    {
+        var writer = new FactoryDroidConfigWriter();
+        var configPath = Path.Combine(_tempDir, "mcp.json");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var json = JsonNode.Parse(await File.ReadAllTextAsync(configPath))!;
+        Assert.NotNull(json["mcpServers"]!["qdrant-skills-mcp"]);
+        Assert.Equal("stdio", json["mcpServers"]!["qdrant-skills-mcp"]!["type"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public void FactoryDroidWriter_SkillDirectoryPath_IsNull()
+    {
+        var writer = new FactoryDroidConfigWriter();
+        Assert.Null(writer.SkillDirectoryPath);
+    }
+
+    #endregion
+
+    #region SnippetFallbackWriter
+
+    [Fact]
+    public void SnippetFallback_CanAutoWrite_IsFalse()
+    {
+        var writer = new SnippetFallbackWriter();
+        Assert.False(writer.CanAutoWrite);
+    }
+
+    [Fact]
+    public void SnippetFallback_GenerateSnippet_ContainsJsonAndInstructions()
+    {
+        var writer = new SnippetFallbackWriter();
+        var snippet = writer.GenerateSnippet(DefaultEntry, AgentScope.User);
+
+        Assert.Contains("qdrant-skills-mcp", snippet);
+        Assert.Contains("dnx", snippet);
+        Assert.Contains("mcpServers", snippet);
+        Assert.Contains("Add the following", snippet);
+    }
+
+    [Fact]
+    public void SnippetFallback_DetectInstallation_AlwaysReturnsNull()
+    {
+        var writer = new SnippetFallbackWriter();
+        Assert.Null(writer.DetectInstallation(AgentScope.User));
+        Assert.Null(writer.DetectInstallation(AgentScope.Project));
+    }
+
+    [Fact]
+    public void SnippetFallback_SkillDirectoryPath_IsNull()
+    {
+        var writer = new SnippetFallbackWriter();
+        Assert.Null(writer.SkillDirectoryPath);
+    }
+
+    [Fact]
+    public async Task SnippetFallback_WriteConfigAsync_Throws()
+    {
+        var writer = new SnippetFallbackWriter();
+        await Assert.ThrowsAsync<NotSupportedException>(
+            () => writer.WriteConfigAsync("/tmp/test.json", DefaultEntry));
+    }
+
+    #endregion
 }
