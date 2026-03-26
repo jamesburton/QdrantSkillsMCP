@@ -51,11 +51,11 @@
 
 - [ ] **CLI-01**: `--console` flag enables CLI mode with single-shot subcommands and JSON output
 - [ ] **CLI-02**: `--console` without subcommand enters interactive REPL mode
-- [ ] **CLI-03**: `--setup` command auto-configures MCP server entry in agent config files
-- [ ] **CLI-04**: `--setup` supports claude, copilot, codex, opencode, docker-agent, kilocode, factory-droid and other detected agents
-- [ ] **CLI-05**: `--setup` auto-writes config where possible, falls back to snippets when format unknown
-- [ ] **CLI-06**: `--setup` supports project-level and user-level configuration
-- [ ] **CLI-07**: `--setup` operates interactively if no parameters provided, accepts args for non-interactive use
+- [x] **CLI-03**: `--setup` command auto-configures MCP server entry in agent config files
+- [x] **CLI-04**: `--setup` supports claude, copilot, codex, opencode, docker-agent, kilocode, factory-droid and other detected agents
+- [x] **CLI-05**: `--setup` auto-writes config where possible, falls back to snippets when format unknown
+- [x] **CLI-06**: `--setup` supports project-level and user-level configuration
+- [x] **CLI-07**: `--setup` operates interactively if no parameters provided, accepts args for non-interactive use
 
 ### Distribution & Dev Experience
 
@@ -127,11 +127,11 @@
 | EMB-06 | Phase 2 | Complete |
 | CLI-01 | Phase 3 | Pending |
 | CLI-02 | Phase 3 | Pending |
-| CLI-03 | Phase 3 | Pending |
-| CLI-04 | Phase 3 | Pending |
-| CLI-05 | Phase 3 | Pending |
-| CLI-06 | Phase 3 | Pending |
-| CLI-07 | Phase 3 | Pending |
+| CLI-03 | Phase 3 | Complete |
+| CLI-04 | Phase 3 | Complete |
+| CLI-05 | Phase 3 | Complete |
+| CLI-06 | Phase 3 | Complete |
+| CLI-07 | Phase 3 | Complete |
 | DIST-01 | Phase 3 | Pending |
 | DIST-02 | Phase 1 | Complete |
 | DIST-03 | Phase 1 | Complete |

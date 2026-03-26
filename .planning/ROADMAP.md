@@ -78,4 +78,4 @@ Phases execute in numeric order: 1 -> 2 -> 3
 |-------|----------------|--------|-----------|
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
 | 2. Search Intelligence and Embedding Providers | 3/3 | Complete | 2026-03-25 |
-| 3. CLI, Distribution, and Bundled Skill | 0/3 | Not started | - |
+| 3. CLI, Distribution, and Bundled Skill | 1/3 | In Progress|  |
