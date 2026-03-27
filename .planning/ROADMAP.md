@@ -68,25 +68,34 @@ Plans:
 - [x] 03-01-PLAN.md -- Console CLI mode: Program.cs mode branching, ConsoleHost, subcommands, REPL
 - [x] 03-02-PLAN.md -- Setup wizard: agent detection, config writers, interactive/non-interactive flows
 - [x] 03-03-PLAN.md -- Bundled SKILL.md, FrequentSkills system, get-skill-guide MCP tool, NuGet packaging
-- [ ] 03-04-PLAN.md -- Gap closure: wire SetupWizard DI registration and Program.cs --setup branch
+- [x] 03-04-PLAN.md -- Gap closure: wire SetupWizard DI registration and Program.cs --setup branch
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
 | 2. Search Intelligence and Embedding Providers | 3/3 | Complete | 2026-03-25 |
 | 3. CLI, Distribution, and Bundled Skill | 4/4 | Complete   | 2026-03-26 |
+| 4. Configuration Management | 0/2 | Planning | - |
 
 ### Phase 4: Configuration Management
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Users can manage Qdrant connection, collection, API keys, embedding provider, and named profiles via --config CLI command, environment variables, and layered config files
+**Requirements**: CFG-01, CFG-02, CFG-03, CFG-04, CFG-05, CFG-06, CFG-07, CFG-08, CFG-09, CFG-10, CFG-11, CFG-12
 **Depends on:** Phase 3
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. `--config show` displays all config values with source annotations ([default], [user], [project], [env:*]) and masked secrets
+  2. `--config set/get/reset/init` manage config values in user-level or project-level JSON files
+  3. Named profiles allow switching between environments (local, cloud) via `--config use <name>`
+  4. `--config env` generates shell-appropriate env var templates (bash, zsh, PowerShell, cmd)
+  5. `--config validate` tests Qdrant connection and embedding provider connectivity
+  6. User-level config (~/.qdrant-skills/config.json) is loaded in all modes (MCP, console, setup)
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 4 to break down)
+- [ ] 04-01-PLAN.md -- ConfigManager core, ShellDetector, SecretMask utilities with unit tests
+- [ ] 04-02-PLAN.md -- ConfigCommand dispatcher, interactive wizard, validate, Program.cs wiring
