@@ -80,3 +80,13 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
 | 2. Search Intelligence and Embedding Providers | 3/3 | Complete | 2026-03-25 |
 | 3. CLI, Distribution, and Bundled Skill | 4/4 | Complete   | 2026-03-26 |
+
+### Phase 4: Configuration Management
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 3
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 4 to break down)
