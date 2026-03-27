@@ -38,18 +38,18 @@ created: 2026-03-27
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 04-01-01 | 01 | 1 | CFG-01 | unit | `dotnet test --filter "FullyQualifiedName~ConfigCommand" -x` | ❌ W0 | ⬜ pending |
-| 04-01-02 | 01 | 1 | CFG-02 | unit | `dotnet test --filter "FullyQualifiedName~ConfigShow" -x` | ❌ W0 | ⬜ pending |
-| 04-01-03 | 01 | 1 | CFG-03 | unit | `dotnet test --filter "FullyQualifiedName~ConfigSet" -x` | ❌ W0 | ⬜ pending |
-| 04-01-04 | 01 | 1 | CFG-04 | unit | `dotnet test --filter "FullyQualifiedName~ConfigGet" -x` | ❌ W0 | ⬜ pending |
-| 04-01-05 | 01 | 1 | CFG-06 | unit | `dotnet test --filter "FullyQualifiedName~ConfigReset" -x` | ❌ W0 | ⬜ pending |
-| 04-01-06 | 01 | 1 | CFG-07 | unit | `dotnet test --filter "FullyQualifiedName~ConfigInit" -x` | ❌ W0 | ⬜ pending |
-| 04-02-01 | 02 | 1 | CFG-09 | unit | `dotnet test --filter "FullyQualifiedName~ConfigProfile" -x` | ❌ W0 | ⬜ pending |
-| 04-03-01 | 03 | 2 | CFG-10 | unit | `dotnet test --filter "FullyQualifiedName~ShellDetect" -x` | ❌ W0 | ⬜ pending |
-| 04-03-02 | 03 | 2 | CFG-11 | unit | `dotnet test --filter "FullyQualifiedName~SecretMask" -x` | ❌ W0 | ⬜ pending |
-| 04-04-01 | 04 | 2 | CFG-05 | integration | `dotnet test --filter "FullyQualifiedName~ConfigValidate" -x` | ❌ W0 | ⬜ pending |
-| 04-04-02 | 04 | 2 | CFG-08 | manual-only | N/A | N/A | ⬜ pending |
-| 04-04-03 | 04 | 2 | CFG-12 | unit | `dotnet test --filter "FullyQualifiedName~UserConfig" -x` | ❌ W0 | ⬜ pending |
+| 04-01-01 | 01 | 1 | CFG-02 | unit | `dotnet test --filter "FullyQualifiedName~ConfigManager" -x` | ❌ W0 | ⬜ pending |
+| 04-01-02 | 01 | 1 | CFG-03 | unit | `dotnet test --filter "FullyQualifiedName~ConfigManager" -x` | ❌ W0 | ⬜ pending |
+| 04-01-03 | 01 | 1 | CFG-04 | unit | `dotnet test --filter "FullyQualifiedName~ConfigManager" -x` | ❌ W0 | ⬜ pending |
+| 04-01-04 | 01 | 1 | CFG-06 | unit | `dotnet test --filter "FullyQualifiedName~ConfigManager" -x` | ❌ W0 | ⬜ pending |
+| 04-01-05 | 01 | 1 | CFG-07 | unit | `dotnet test --filter "FullyQualifiedName~ConfigManager" -x` | ❌ W0 | ⬜ pending |
+| 04-01-06 | 01 | 1 | CFG-09 | unit | `dotnet test --filter "FullyQualifiedName~ConfigProfile" -x` | ❌ W0 | ⬜ pending |
+| 04-01-07 | 01 | 1 | CFG-10 | unit | `dotnet test --filter "FullyQualifiedName~ShellDetect" -x` | ❌ W0 | ⬜ pending |
+| 04-01-08 | 01 | 1 | CFG-11 | unit | `dotnet test --filter "FullyQualifiedName~SecretMask" -x` | ❌ W0 | ⬜ pending |
+| 04-02-01 | 02 | 2 | CFG-01 | unit | `dotnet test --filter "FullyQualifiedName~ConfigCommand" -x` | ❌ W0 | ⬜ pending |
+| 04-02-02 | 02 | 2 | CFG-05 | integration | `dotnet test --filter "FullyQualifiedName~ConfigValidate" -x` | ❌ W0 | ⬜ pending |
+| 04-02-03 | 02 | 2 | CFG-08 | manual-only | N/A | N/A | ⬜ pending |
+| 04-02-04 | 02 | 2 | CFG-12 | unit | `dotnet test --filter "FullyQualifiedName~UserConfig" -x` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
