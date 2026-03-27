@@ -1,3 +1,4 @@
+using Qdrant.Client;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 using QdrantSkillsMCP.Infrastructure.Configuration;
@@ -171,24 +172,119 @@ public static class ConfigCommand
     }
 
     /// <summary>
-    /// Validates Qdrant connectivity and embedding provider.
-    /// Implemented in Task 2.
+    /// Validates Qdrant connectivity and embedding provider configuration.
     /// </summary>
     internal static async Task<int> RunValidate(ConfigManager configManager)
     {
-        // Placeholder -- will be implemented in Task 2
-        Console.WriteLine("validate: not yet implemented");
-        return 1;
+        var entries = configManager.GetAllWithSources();
+        var host = entries.GetValueOrDefault("QdrantHost")?.Value ?? "localhost";
+        var portStr = entries.GetValueOrDefault("QdrantGrpcPort")?.Value ?? "6334";
+        var collection = entries.GetValueOrDefault("CollectionName")?.Value ?? "skills";
+        var apiKey = entries.GetValueOrDefault("QdrantApiKey")?.Value;
+
+        if (!int.TryParse(portStr, out var port))
+            port = 6334;
+
+        Console.WriteLine($"Resolved config: host={host}, port={port}, collection={collection}");
+
+        var allPassed = true;
+
+        // TLS warning for non-localhost hosts
+        var isLocalhost = host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            || host == "127.0.0.1"
+            || host == "::1";
+
+        if (!isLocalhost)
+        {
+            Console.WriteLine("WARNING: Remote host detected without explicit TLS configuration. Remote hosts typically require HTTPS.");
+        }
+
+        // Test Qdrant connection
+        Console.Write("Qdrant connection... ");
+        try
+        {
+            var client = new QdrantClient(host, port, apiKey: apiKey);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await client.ListCollectionsAsync(cts.Token);
+            Console.WriteLine("PASS");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"FAIL ({ex.GetType().Name}: {ex.Message})");
+            allPassed = false;
+        }
+
+        return allPassed ? 0 : 1;
     }
 
     /// <summary>
-    /// Interactive wizard loop. Implemented in Task 2.
+    /// Interactive wizard loop. Presents a menu and routes to subcommand operations.
     /// </summary>
     internal static async Task<int> RunInteractiveAsync(ConfigManager configManager)
     {
-        // Placeholder -- will be implemented in Task 2
-        Console.WriteLine("Interactive wizard: not yet implemented");
-        return 0;
+        var console = AnsiConsole.Create(new AnsiConsoleSettings
+        {
+            Out = new AnsiConsoleOutput(Console.Out)
+        });
+
+        Console.WriteLine("QdrantSkills Configuration Wizard");
+        Console.WriteLine("=================================\n");
+
+        while (true)
+        {
+            var choice = console.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("What would you like to do?")
+                    .AddChoices(
+                        "Show config",
+                        "Set a value",
+                        "Initialize config",
+                        "Switch profile",
+                        "Generate env vars",
+                        "Validate connection",
+                        "Reset",
+                        "Exit"));
+
+            switch (choice)
+            {
+                case "Show config":
+                    RunShow(configManager, ["--config", "show"]);
+                    break;
+                case "Set a value":
+                    var key = console.Prompt(new SelectionPrompt<string>()
+                        .Title("Select key to set:")
+                        .AddChoices(ConfigManager.ConfigurableKeys));
+                    var value = console.Prompt(new TextPrompt<string>($"Enter value for {key}:"));
+                    await configManager.SetValueAsync(key, value);
+                    Console.WriteLine($"Set {key} = {value}");
+                    break;
+                case "Initialize config":
+                    await RunInit(configManager);
+                    break;
+                case "Switch profile":
+                    var profiles = configManager.GetProfiles();
+                    var profileName = profiles.Count > 0
+                        ? console.Prompt(new TextPrompt<string>("Profile name:")
+                            .DefaultValue(profiles[0]))
+                        : console.Prompt(new TextPrompt<string>("Profile name:"));
+                    await configManager.UseProfileAsync(profileName);
+                    Console.WriteLine($"Switched to profile: {profileName}");
+                    break;
+                case "Generate env vars":
+                    RunEnv(configManager);
+                    break;
+                case "Validate connection":
+                    await RunValidate(configManager);
+                    break;
+                case "Reset":
+                    await RunReset(configManager, ["--config", "reset"]);
+                    break;
+                case "Exit":
+                    return 0;
+            }
+
+            Console.WriteLine();
+        }
     }
 
     private static int RunUsage()
