@@ -80,7 +80,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Core MCP Server | 5/5 | Complete | 2026-03-25 |
 | 2. Search Intelligence and Embedding Providers | 3/3 | Complete | 2026-03-25 |
 | 3. CLI, Distribution, and Bundled Skill | 4/4 | Complete   | 2026-03-26 |
-| 4. Configuration Management | 0/2 | Planning | - |
+| 4. Configuration Management | 1/2 | In Progress | - |
 
 ### Phase 4: Configuration Management
 
@@ -97,5 +97,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md -- ConfigManager core, ShellDetector, SecretMask utilities with unit tests
+- [x] 04-01-PLAN.md -- ConfigManager core, ShellDetector, SecretMask utilities with unit tests
 - [ ] 04-02-PLAN.md -- ConfigCommand dispatcher, interactive wizard, validate, Program.cs wiring

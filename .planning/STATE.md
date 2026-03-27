@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 03-04-PLAN.md (setup DI wiring gap closure)
-last_updated: "2026-03-27T18:31:35.607Z"
-last_activity: 2026-03-26 -- Plan 03-04 executed (setup DI wiring gap closure)
+status: in_progress
+stopped_at: Completed 04-01-PLAN.md (ConfigManager core services)
+last_updated: "2026-03-27T23:35:39Z"
+last_activity: 2026-03-27 -- Plan 04-01 executed (ConfigManager core services)
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
-  percent: 100
+  total_plans: 14
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Agents can semantically search and retrieve the right skills at the right time
-**Current focus:** All phases complete (including gap closures) -- v1.0 milestone achieved
+**Current focus:** Phase 4 Configuration Management -- config commands, env vars, cross-platform helpers
 
 ## Current Position
 
-Phase: 3 of 3 (CLI, Distribution, and Bundled Skill)
-Plan: 4 of 4 in current phase -- COMPLETE (includes gap closure plan)
-Status: Phase 3 Complete -- All Phases Complete
-Last activity: 2026-03-26 -- Plan 03-04 executed (setup DI wiring gap closure)
+Phase: 4 of 4 (Configuration Management)
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: Plan 04-01 complete, plan 04-02 remaining
+Last activity: 2026-03-27 -- Plan 04-01 executed (ConfigManager core services)
 
-Progress: [██████████] 100%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
+- Total plans completed: 13
 - Average duration: 7min
-- Total execution time: 1.33 hours
+- Total execution time: 1.42 hours
 
 **By Phase:**
 
@@ -46,9 +46,10 @@ Progress: [██████████] 100%
 | 01-core-mcp-server | 5 | 32min | 6min |
 | 02-search-intelligence-and-embedding-providers | 3 | 23min | 8min |
 | 03-cli-distribution-and-bundled-skill | 4/4 | 35min | 9min |
+| 04-configuration-management | 1/2 | 5min | 5min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (8min), 02-03 (10min), 03-02 (11min), 03-03 (10min), 03-04 (4min)
+- Last 5 plans: 02-03 (10min), 03-02 (11min), 03-03 (10min), 03-04 (4min), 04-01 (5min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -100,6 +101,9 @@ Recent decisions affecting current work:
 - [03-03]: Embedded resources use SkillGuide subfolder: QdrantSkillsMCP.Infrastructure.SkillGuide.SKILL.md
 - [03-04]: AddSetupServices is separate from AddQdrantSkillsInfrastructure to avoid Qdrant dependency in setup mode
 - [03-04]: SetupWizard resolved via GetRequiredService from host.Services in Program.cs
+- [04-01]: ConfigManager uses reflection to derive configurable keys from QdrantSkillsOptions, excluding internal test properties
+- [04-01]: User config uses profile-based JSON structure; project config uses flat QdrantSkills section
+- [04-01]: Source precedence: env > project > user > default with annotation tracking
 
 ### Pending Todos
 
@@ -118,5 +122,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-27
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-configuration-management/04-CONTEXT.md
+Stopped at: Completed 04-01-PLAN.md (ConfigManager core services)
+Resume file: .planning/phases/04-configuration-management/04-02-PLAN.md
