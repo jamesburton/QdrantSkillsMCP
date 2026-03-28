@@ -361,6 +361,232 @@ public sealed class ConfigWriterTests : IDisposable
 
     #endregion
 
+    #region CursorConfigWriter
+
+    [Fact]
+    public async Task CursorWriter_UsesMcpServersKey()
+    {
+        var writer = new CursorConfigWriter();
+        var configPath = Path.Combine(_tempDir, "mcp.json");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var json = JsonNode.Parse(await File.ReadAllTextAsync(configPath))!;
+        Assert.NotNull(json["mcpServers"]);
+        Assert.NotNull(json["mcpServers"]!["qdrant-skills-mcp"]);
+        Assert.Equal("dnx", json["mcpServers"]!["qdrant-skills-mcp"]!["command"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task CursorWriter_CreatesBackup()
+    {
+        var writer = new CursorConfigWriter();
+        var configPath = Path.Combine(_tempDir, "mcp.json");
+        await File.WriteAllTextAsync(configPath, """{"existing": true}""");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        Assert.True(File.Exists(configPath + ".bak"));
+        var backup = await File.ReadAllTextAsync(configPath + ".bak");
+        Assert.Contains("existing", backup);
+    }
+
+    [Fact]
+    public void CursorWriter_OnlySupportsProjectScope()
+    {
+        var writer = new CursorConfigWriter();
+        Assert.Single(writer.SupportedScopes);
+        Assert.Equal(AgentScope.Project, writer.SupportedScopes[0]);
+    }
+
+    [Fact]
+    public void CursorWriter_SkillDirectoryPath_IsNull()
+    {
+        var writer = new CursorConfigWriter();
+        Assert.Null(writer.SkillDirectoryPath);
+    }
+
+    [Fact]
+    public void CursorWriter_GenerateSnippet_ContainsMcpServersKey()
+    {
+        var writer = new CursorConfigWriter();
+        var snippet = writer.GenerateSnippet(DefaultEntry, AgentScope.Project);
+
+        var json = JsonNode.Parse(snippet);
+        Assert.NotNull(json);
+        Assert.NotNull(json!["mcpServers"]!["qdrant-skills-mcp"]);
+    }
+
+    #endregion
+
+    #region WindsurfConfigWriter
+
+    [Fact]
+    public async Task WindsurfWriter_UsesMcpServersKey()
+    {
+        var writer = new WindsurfConfigWriter();
+        var configPath = Path.Combine(_tempDir, "mcp_config.json");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var json = JsonNode.Parse(await File.ReadAllTextAsync(configPath))!;
+        Assert.NotNull(json["mcpServers"]);
+        Assert.NotNull(json["mcpServers"]!["qdrant-skills-mcp"]);
+        Assert.Equal("dnx", json["mcpServers"]!["qdrant-skills-mcp"]!["command"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task WindsurfWriter_CreatesBackup()
+    {
+        var writer = new WindsurfConfigWriter();
+        var configPath = Path.Combine(_tempDir, "mcp_config.json");
+        await File.WriteAllTextAsync(configPath, """{"existing": true}""");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        Assert.True(File.Exists(configPath + ".bak"));
+        var backup = await File.ReadAllTextAsync(configPath + ".bak");
+        Assert.Contains("existing", backup);
+    }
+
+    [Fact]
+    public void WindsurfWriter_OnlySupportsUserScope()
+    {
+        var writer = new WindsurfConfigWriter();
+        Assert.Single(writer.SupportedScopes);
+        Assert.Equal(AgentScope.User, writer.SupportedScopes[0]);
+    }
+
+    [Fact]
+    public void WindsurfWriter_SkillDirectoryPath_IsNull()
+    {
+        var writer = new WindsurfConfigWriter();
+        Assert.Null(writer.SkillDirectoryPath);
+    }
+
+    [Fact]
+    public void WindsurfWriter_GenerateSnippet_ContainsMcpServersKey()
+    {
+        var writer = new WindsurfConfigWriter();
+        var snippet = writer.GenerateSnippet(DefaultEntry, AgentScope.User);
+
+        var json = JsonNode.Parse(snippet);
+        Assert.NotNull(json);
+        Assert.NotNull(json!["mcpServers"]!["qdrant-skills-mcp"]);
+    }
+
+    #endregion
+
+    #region ZedConfigWriter
+
+    [Fact]
+    public async Task ZedWriter_UsesNestedContextServersFormat()
+    {
+        var writer = new ZedConfigWriter();
+        var configPath = Path.Combine(_tempDir, "settings.json");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var json = JsonNode.Parse(await File.ReadAllTextAsync(configPath))!;
+        Assert.NotNull(json["assistant"]);
+        Assert.NotNull(json["assistant"]!["context_servers"]);
+        Assert.NotNull(json["assistant"]!["context_servers"]!["qdrant-skills-mcp"]);
+        Assert.Null(json["mcpServers"]); // Must NOT use mcpServers at root
+        Assert.Equal("dnx", json["assistant"]!["context_servers"]!["qdrant-skills-mcp"]!["command"]!["path"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task ZedWriter_CommandHasPathAndArgs()
+    {
+        var writer = new ZedConfigWriter();
+        var configPath = Path.Combine(_tempDir, "settings.json");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var json = JsonNode.Parse(await File.ReadAllTextAsync(configPath))!;
+        var command = json["assistant"]!["context_servers"]!["qdrant-skills-mcp"]!["command"]!;
+        Assert.Equal("dnx", command["path"]!.GetValue<string>());
+        var args = command["args"]!.AsArray();
+        Assert.Single(args);
+        Assert.Equal("qdrant-skills-mcp", args[0]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task ZedWriter_MergesWithExistingConfig_PreservesOtherKeys()
+    {
+        var writer = new ZedConfigWriter();
+        var configPath = Path.Combine(_tempDir, "settings.json");
+        var existing = new JsonObject
+        {
+            ["theme"] = "dark",
+            ["assistant"] = new JsonObject
+            {
+                ["context_servers"] = new JsonObject
+                {
+                    ["other-server"] = new JsonObject
+                    {
+                        ["command"] = new JsonObject
+                        {
+                            ["path"] = "other-cmd",
+                            ["args"] = new JsonArray("arg1")
+                        }
+                    }
+                }
+            }
+        };
+        await File.WriteAllTextAsync(configPath, existing.ToJsonString());
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        var json = JsonNode.Parse(await File.ReadAllTextAsync(configPath))!;
+        Assert.Equal("dark", json["theme"]!.GetValue<string>());
+        Assert.NotNull(json["assistant"]!["context_servers"]!["other-server"]);
+        Assert.NotNull(json["assistant"]!["context_servers"]!["qdrant-skills-mcp"]);
+    }
+
+    [Fact]
+    public async Task ZedWriter_CreatesBackup()
+    {
+        var writer = new ZedConfigWriter();
+        var configPath = Path.Combine(_tempDir, "settings.json");
+        await File.WriteAllTextAsync(configPath, """{"existing": true}""");
+
+        await writer.WriteConfigAsync(configPath, DefaultEntry);
+
+        Assert.True(File.Exists(configPath + ".bak"));
+        var backup = await File.ReadAllTextAsync(configPath + ".bak");
+        Assert.Contains("existing", backup);
+    }
+
+    [Fact]
+    public void ZedWriter_OnlySupportsUserScope()
+    {
+        var writer = new ZedConfigWriter();
+        Assert.Single(writer.SupportedScopes);
+        Assert.Equal(AgentScope.User, writer.SupportedScopes[0]);
+    }
+
+    [Fact]
+    public void ZedWriter_SkillDirectoryPath_IsNull()
+    {
+        var writer = new ZedConfigWriter();
+        Assert.Null(writer.SkillDirectoryPath);
+    }
+
+    [Fact]
+    public void ZedWriter_GenerateSnippet_HasNestedStructure()
+    {
+        var writer = new ZedConfigWriter();
+        var snippet = writer.GenerateSnippet(DefaultEntry, AgentScope.User);
+
+        var json = JsonNode.Parse(snippet);
+        Assert.NotNull(json);
+        Assert.NotNull(json!["assistant"]!["context_servers"]!["qdrant-skills-mcp"]);
+        Assert.Equal("dnx", json["assistant"]!["context_servers"]!["qdrant-skills-mcp"]!["command"]!["path"]!.GetValue<string>());
+    }
+
+    #endregion
+
     #region SnippetFallbackWriter
 
     [Fact]

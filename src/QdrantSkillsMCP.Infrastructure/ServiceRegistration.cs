@@ -32,7 +32,7 @@ public static class ServiceRegistration
     /// </summary>
     public static IServiceCollection AddSetupServices(this IServiceCollection services)
     {
-        // Config writers (all 9 implementations)
+        // Config writers (all 12 implementations)
         services.AddSingleton<IAgentConfigWriter, ClaudeConfigWriter>();
         services.AddSingleton<IAgentConfigWriter, ClaudeDesktopConfigWriter>();
         services.AddSingleton<IAgentConfigWriter, CopilotConfigWriter>();
@@ -41,6 +41,9 @@ public static class ServiceRegistration
         services.AddSingleton<IAgentConfigWriter, OpenCodeConfigWriter>();
         services.AddSingleton<IAgentConfigWriter, KiloCodeConfigWriter>();
         services.AddSingleton<IAgentConfigWriter, FactoryDroidConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, CursorConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, WindsurfConfigWriter>();
+        services.AddSingleton<IAgentConfigWriter, ZedConfigWriter>();
         services.AddSingleton<IAgentConfigWriter, SnippetFallbackWriter>();
 
         // Detector and wizard
