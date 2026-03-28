@@ -44,15 +44,16 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Download Package Artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: nuget-package
-          path: ./artifacts
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.x"
+
+      - name: Pack with tag version
+        run: dotnet pack src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj -c Release -o ./artifacts
 
       - name: Publish to NuGet.org
         run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
