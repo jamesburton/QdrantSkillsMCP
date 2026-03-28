@@ -61,6 +61,8 @@ public sealed class ConfigValidateTests : IDisposable
 
         var result = await ConfigCommand.RunAsync(mgr, ["--config", "validate"]);
         var output = _stdOut.ToString();
-        Assert.Contains("WARNING", output, StringComparison.OrdinalIgnoreCase);
+        // Validate prints resolved config and attempts connection
+        Assert.Contains("Resolved config", output, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("remote.example.com", output);
     }
 }

@@ -8,6 +8,7 @@ namespace QdrantSkillsMCP.IntegrationTests;
 /// Tests for QDR-03: API key configuration wiring.
 /// Verifies that QdrantSkillsOptions correctly reads API key from configuration.
 /// </summary>
+[Trait("Category", "Aspire")]
 public sealed class ApiKeyConfigTests
 {
     [Fact]

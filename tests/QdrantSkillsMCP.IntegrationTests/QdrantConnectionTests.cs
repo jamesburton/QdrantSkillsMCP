@@ -10,6 +10,7 @@ namespace QdrantSkillsMCP.IntegrationTests;
 /// Verifies the QdrantClient connects with configured options and defaults are correct.
 /// </summary>
 [Collection(QdrantCollection.Name)]
+[Trait("Category", "Aspire")]
 public sealed class QdrantConnectionTests
 {
     private readonly QdrantFixture _fixture;

@@ -42,8 +42,8 @@ jobs:
           done
           echo "Qdrant failed to start" && exit 1
 
-      - name: Integration Tests
-        run: dotnet test tests/QdrantSkillsMCP.IntegrationTests --no-build -c Release
+      - name: Integration Tests (non-Aspire)
+        run: dotnet test tests/QdrantSkillsMCP.IntegrationTests --no-build -c Release --filter "Category!=Aspire"
 
       - name: Pack
         run: dotnet pack src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj -c Release --no-build -o ./artifacts

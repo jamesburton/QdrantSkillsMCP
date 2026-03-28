@@ -17,6 +17,7 @@ namespace QdrantSkillsMCP.IntegrationTests;
 /// Tests search/load/reset with sessionId, output modes, and ALREADY LOADED behavior.
 /// </summary>
 [Collection(QdrantCollection.Name)]
+[Trait("Category", "Aspire")]
 public sealed class SessionIdIntegrationTests : IAsyncLifetime
 {
     private readonly QdrantFixture _fixture;

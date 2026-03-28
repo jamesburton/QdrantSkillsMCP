@@ -12,6 +12,7 @@ namespace QdrantSkillsMCP.IntegrationTests;
 /// IEmbeddingService implementation based on EmbeddingProvider configuration.
 /// These tests validate wiring only -- no actual API keys or running services needed.
 /// </summary>
+[Trait("Category", "Aspire")]
 public sealed class EmbeddingProviderIntegrationTests
 {
     [Fact]

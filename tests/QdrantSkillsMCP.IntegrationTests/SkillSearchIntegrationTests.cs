@@ -14,6 +14,7 @@ namespace QdrantSkillsMCP.IntegrationTests;
 /// Verifies semantic search ranking, maxResults, score threshold, and archive filtering.
 /// </summary>
 [Collection(QdrantCollection.Name)]
+[Trait("Category", "Aspire")]
 public sealed class SkillSearchIntegrationTests : IAsyncLifetime
 {
     private readonly QdrantFixture _fixture;

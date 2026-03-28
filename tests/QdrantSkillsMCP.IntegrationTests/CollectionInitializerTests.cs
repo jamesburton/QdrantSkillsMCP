@@ -12,6 +12,7 @@ namespace QdrantSkillsMCP.IntegrationTests;
 /// and payload indexes. Runs against a real Qdrant container via Aspire.
 /// </summary>
 [Collection(QdrantCollection.Name)]
+[Trait("Category", "Aspire")]
 public sealed class CollectionInitializerTests : IAsyncLifetime
 {
     private readonly QdrantFixture _fixture;

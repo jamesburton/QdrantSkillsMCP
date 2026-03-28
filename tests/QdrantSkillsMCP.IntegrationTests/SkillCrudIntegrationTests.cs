@@ -14,6 +14,7 @@ namespace QdrantSkillsMCP.IntegrationTests;
 /// Verifies add, retrieve, update, delete, and archive operations with lossless round-trip.
 /// </summary>
 [Collection(QdrantCollection.Name)]
+[Trait("Category", "Aspire")]
 public sealed class SkillCrudIntegrationTests : IAsyncLifetime
 {
     private readonly QdrantFixture _fixture;

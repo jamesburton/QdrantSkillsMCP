@@ -42,11 +42,11 @@ public sealed class ToolDiscoveryTests
     }
 
     [Fact]
-    public void InfrastructureAssemblyContainsExpected7Tools()
+    public void InfrastructureAssemblyContainsExpectedTools()
     {
         var toolNames = DiscoveredTools.Select(t => t.Attribute.Name).OrderBy(n => n).ToArray();
 
-        Assert.Equal(7, toolNames.Length);
+        Assert.Equal(9, toolNames.Length);
 
         Assert.Contains("add-skill", toolNames);
         Assert.Contains("update-skill", toolNames);
@@ -55,6 +55,8 @@ public sealed class ToolDiscoveryTests
         Assert.Contains("search-skills", toolNames);
         Assert.Contains("load-skill", toolNames);
         Assert.Contains("list-skills", toolNames);
+        Assert.Contains("reset-session", toolNames);
+        Assert.Contains("get-skill-guide", toolNames);
     }
 
     [Fact]
