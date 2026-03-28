@@ -19,6 +19,9 @@ public sealed class QdrantSkillsOptions
     /// <summary>Optional Qdrant API key for authenticated instances.</summary>
     public string? QdrantApiKey { get; set; }
 
+    /// <summary>Whether to use HTTPS/TLS for Qdrant connection. Default: false (auto-detected for remote hosts).</summary>
+    public bool UseTls { get; set; }
+
     /// <summary>Qdrant collection name. Default: skills.</summary>
     public string CollectionName { get; set; } = "skills";
 

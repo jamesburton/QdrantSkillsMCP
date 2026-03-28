@@ -69,6 +69,7 @@ public static class ServiceRegistration
             return new QdrantClient(
                 options.QdrantHost,
                 options.QdrantGrpcPort,
+                https: options.UseTls,
                 apiKey: options.QdrantApiKey);
         });
 

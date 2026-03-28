@@ -181,36 +181,47 @@ public static class ConfigCommand
         var portStr = entries.GetValueOrDefault("QdrantGrpcPort")?.Value ?? "6334";
         var collection = entries.GetValueOrDefault("CollectionName")?.Value ?? "skills";
         var apiKey = entries.GetValueOrDefault("QdrantApiKey")?.Value;
+        var useTlsStr = entries.GetValueOrDefault("UseTls")?.Value;
+        var useTls = string.Equals(useTlsStr, "true", StringComparison.OrdinalIgnoreCase)
+                  || string.Equals(useTlsStr, "True", StringComparison.OrdinalIgnoreCase);
 
         if (!int.TryParse(portStr, out var port))
             port = 6334;
 
-        Console.WriteLine($"Resolved config: host={host}, port={port}, collection={collection}");
-
-        var allPassed = true;
-
-        // TLS warning for non-localhost hosts
         var isLocalhost = host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
             || host == "127.0.0.1"
             || host == "::1";
 
-        if (!isLocalhost)
+        // Auto-enable TLS for remote hosts unless explicitly set
+        if (!isLocalhost && !useTls && useTlsStr is null)
         {
-            Console.WriteLine("WARNING: Remote host detected without explicit TLS configuration. Remote hosts typically require HTTPS.");
+            useTls = true;
+            Console.WriteLine("INFO: Remote host detected — auto-enabling TLS. Set UseTls=false to override.");
         }
+
+        Console.WriteLine($"Resolved config: host={host}, port={port}, collection={collection}, tls={useTls}");
+
+        var allPassed = true;
 
         // Test Qdrant connection
         Console.Write("Qdrant connection... ");
         try
         {
-            var client = new QdrantClient(host, port, apiKey: apiKey);
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var client = new QdrantClient(host, port, https: useTls, apiKey: apiKey);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             await client.ListCollectionsAsync(cts.Token);
             Console.WriteLine("PASS");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"FAIL ({ex.GetType().Name}: {ex.Message})");
+
+            // Suggest TLS toggle if connection failed
+            if (!useTls && !isLocalhost)
+                Console.WriteLine("HINT: Try setting UseTls=true for remote hosts (--config set UseTls=true)");
+            else if (useTls && ex.Message.Contains("HTTP_1_1_REQUIRED", StringComparison.OrdinalIgnoreCase))
+                Console.WriteLine("HINT: Host requires HTTP/1.1 — gRPC over HTTP/2 may not be supported by this proxy. Try the Qdrant REST port instead.");
+
             allPassed = false;
         }
 
@@ -254,7 +265,18 @@ public static class ConfigCommand
                     var key = console.Prompt(new SelectionPrompt<string>()
                         .Title("Select key to set:")
                         .AddChoices(ConfigManager.ConfigurableKeys));
-                    var value = console.Prompt(new TextPrompt<string>($"Enter value for {key}:"));
+                    var currentValue = configManager.GetValue(key);
+                    var example = GetExample(key);
+                    var prompt = new TextPrompt<string>($"Enter value for [green]{key}[/]{example}:");
+                    if (currentValue is not null)
+                        prompt.DefaultValue(currentValue);
+                    prompt.AllowEmpty();
+                    var value = console.Prompt(prompt);
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        Console.WriteLine("(skipped)");
+                        break;
+                    }
                     await configManager.SetValueAsync(key, value);
                     Console.WriteLine($"Set {key} = {value}");
                     break;
@@ -286,6 +308,23 @@ public static class ConfigCommand
             Console.WriteLine();
         }
     }
+
+    private static string GetExample(string key) => key switch
+    {
+        "QdrantHost" => " (e.g. localhost, qdrant-qhub.azurewebsites.net)",
+        "QdrantGrpcPort" => " (e.g. 6334 for local, 443 or 80 for cloud)",
+        "QdrantApiKey" => " (your Qdrant API key)",
+        "CollectionName" => " (e.g. skills)",
+        "UseTls" => " (true for remote/HTTPS hosts, false for local)",
+        "EmbeddingProvider" => " (OpenAI, LocalONNX, Ollama, AzureOpenAI)",
+        "OpenAiApiKey" => " (sk-...)",
+        "EmbeddingModel" => " (e.g. text-embedding-3-small)",
+        "EmbeddingUrl" => " (e.g. http://localhost:11434 for Ollama)",
+        "AzureOpenAiEndpoint" => " (e.g. https://myresource.openai.azure.com/)",
+        "AzureOpenAiApiKey" => " (your Azure OpenAI key)",
+        "AzureOpenAiDeployment" => " (e.g. text-embedding-ada-002)",
+        _ => ""
+    };
 
     private static int RunUsage()
     {
