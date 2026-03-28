@@ -5,6 +5,7 @@ using QdrantSkillsMCP.Infrastructure.Setup;
 
 namespace QdrantSkillsMCP.UnitTests.Setup;
 
+[Collection("ConsoleOutput")]
 public sealed class SetupWizardTests : IDisposable
 {
     private readonly string _tempDir;

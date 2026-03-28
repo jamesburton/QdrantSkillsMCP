@@ -8,7 +8,7 @@ namespace QdrantSkillsMCP.UnitTests.Config;
 /// Tests for ConfigCommand subcommand dispatcher.
 /// Uses [Collection] to prevent Console.Out race conditions in parallel test runs.
 /// </summary>
-[Collection("ConfigCommand")]
+[Collection("ConsoleOutput")]
 public sealed class ConfigCommandTests : IDisposable
 {
     private readonly string _tempDir;
