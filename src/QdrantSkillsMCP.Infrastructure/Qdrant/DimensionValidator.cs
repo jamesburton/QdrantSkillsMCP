@@ -37,6 +37,32 @@ public sealed class DimensionValidator : IHostedService
 
     public async Task StartAsync(CancellationToken ct)
     {
+        try
+        {
+            await RunValidationAsync(ct);
+        }
+        catch (Grpc.Core.RpcException ex)
+        {
+            Console.Error.WriteLine(
+                $"[DimensionValidator] Qdrant unreachable at startup — dimension validation skipped. " +
+                $"Skills will not be available until Qdrant is reachable. ({ex.Status.StatusCode}: {ex.Status.Detail})");
+            _logger.LogWarning(ex,
+                "Qdrant unreachable at startup — dimension validation skipped. " +
+                "Skills will not be available until Qdrant is reachable.");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(
+                $"[DimensionValidator] Qdrant unreachable at startup — dimension validation skipped. " +
+                $"Skills will not be available until Qdrant is reachable. ({ex.GetType().Name}: {ex.Message})");
+            _logger.LogWarning(ex,
+                "Qdrant unreachable at startup — dimension validation skipped. " +
+                "Skills will not be available until Qdrant is reachable.");
+        }
+    }
+
+    private async Task RunValidationAsync(CancellationToken ct)
+    {
         _logger.LogInformation("Validating embedding dimensions for collection '{CollectionName}'...",
             _options.CollectionName);
 
