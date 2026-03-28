@@ -155,6 +155,11 @@ public static class ServiceRegistration
         services.AddSingleton<IEmbeddingService, OpenAiEmbeddingService>();
     }
 
+    private const string OnnxNativesNotFoundMessage =
+        "ONNX runtime natives not found. The tool package does not bundle ONNX natives. " +
+        "Either: (1) install the full ONNX runtime: dotnet add package Microsoft.ML.OnnxRuntime, " +
+        "or (2) switch to a different embedding provider: qdrant-skills-mcp --config set EmbeddingProvider=OpenAI";
+
     private static void RegisterLocalOnnx(IServiceCollection services, bool isDefault)
     {
         services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
@@ -165,19 +170,27 @@ public static class ServiceRegistration
             if (isDefault)
             {
                 logger.LogWarning(
-                    "No embedding provider configured. Defaulting to LocalONNX. " +
-                    "Set QdrantSkills:EmbeddingProvider or QDRANT_SKILLS__EmbeddingProvider " +
-                    "to silence this warning.");
+                    "No embedding provider configured. Defaulting to LocalONNX which requires native ONNX runtime. " +
+                    "If this fails, set EmbeddingProvider to OpenAI or Ollama via: " +
+                    "qdrant-skills-mcp --config set EmbeddingProvider=OpenAI");
             }
 
-            var modelPath = OnnxModelResolver.ResolveModelPath(options, logger);
-            var vocabPath = OnnxModelResolver.ResolveVocabPath(options, logger);
+            try
+            {
+                var modelPath = OnnxModelResolver.ResolveModelPath(options, logger);
+                var vocabPath = OnnxModelResolver.ResolveVocabPath(options, logger);
 
-            // Create ONNX service and bridge from SK's ITextEmbeddingGenerationService to M.E.AI's IEmbeddingGenerator
+                // Create ONNX service and bridge from SK's ITextEmbeddingGenerationService to M.E.AI's IEmbeddingGenerator
 #pragma warning disable CS0618 // BertOnnxTextEmbeddingGenerationService is obsolete but still functional
-            var onnxService = BertOnnxTextEmbeddingGenerationService.Create(modelPath, vocabPath);
+                var onnxService = BertOnnxTextEmbeddingGenerationService.Create(modelPath, vocabPath);
 #pragma warning restore CS0618
-            return onnxService.AsEmbeddingGenerator();
+                return onnxService.AsEmbeddingGenerator();
+            }
+            catch (Exception ex) when (ex is DllNotFoundException or TypeLoadException or FileNotFoundException)
+            {
+                logger.LogError(ex, OnnxNativesNotFoundMessage);
+                throw new InvalidOperationException(OnnxNativesNotFoundMessage, ex);
+            }
         });
 
         // Override VectorDimensions to 384 if still at default 1536
