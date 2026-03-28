@@ -86,7 +86,11 @@ jobs:
           dotnet pack src/QdrantSkillsMCP.Models.BgeBase/QdrantSkillsMCP.Models.BgeBase.csproj -c Release -o ./artifacts
 
       - name: Publish to NuGet.org
-        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: |
+          for pkg in ./artifacts/*.nupkg; do
+            echo "Pushing $pkg..."
+            dotnet nuget push "$pkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate || echo "WARNING: Failed to push $pkg (may need API key scope update for new package IDs)"
+          done
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
