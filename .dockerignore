@@ -1,0 +1,10 @@
+.planning/
+.git/
+.github/
+**/bin/
+**/obj/
+nupkg/
+tests/
+**/*.user
+**/*.suo
+.vs/
