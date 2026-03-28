@@ -16,22 +16,27 @@ If QdrantSkillsMCP is already configured as an MCP server, you can use:
 
 ## Installation
 
-If not yet installed:
+No install needed with .NET 10's `dnx` (always uses the latest version):
 
 ```bash
-# Install as a .NET global tool
-dotnet tool install -g QdrantSkillsMCP
+# Initialize config with local Qdrant defaults
+dnx QdrantSkillsMCP -- --config init
 
-# Run the setup wizard to configure your agent
-qdrant-skills-mcp --setup
+# Auto-configure your AI agent
+dnx QdrantSkillsMCP -- --setup
+
+# Verify connection
+dnx QdrantSkillsMCP -- --config validate
 ```
+
+Or install globally: `dotnet tool install -g QdrantSkillsMCP`
 
 ## Verification
 
 Check that the MCP server is running and connected:
 
 ```bash
-qdrant-skills-mcp --console status
+dnx QdrantSkillsMCP -- --console status
 ```
 
 Once configured, use `get-skill-guide` to learn the full search-before-load workflow.

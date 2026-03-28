@@ -21,6 +21,7 @@ else if (args.Contains("--console"))
 {
     // CLI mode: stdout is safe for output (no MCP transport)
     var builder = Host.CreateApplicationBuilder(args);
+    builder.Logging.ClearProviders().AddConsole();
     UserConfigLoader.AddUserConfig(builder.Configuration);
     builder.Configuration.AddJsonFile("qdrant-skills.json", optional: true, reloadOnChange: false);
     builder.Services.AddQdrantSkillsInfrastructure(builder.Configuration);
@@ -34,6 +35,7 @@ else if (args.Contains("--setup"))
 {
     // Setup wizard mode: registers only setup services (no Qdrant connection needed)
     var builder = Host.CreateApplicationBuilder(args);
+    builder.Logging.ClearProviders().AddConsole();
     UserConfigLoader.AddUserConfig(builder.Configuration);
     builder.Services.AddSetupServices();
 
@@ -48,7 +50,7 @@ else
     var builder = Host.CreateApplicationBuilder(args);
 
     // CRITICAL: ALL logging to stderr. Stdout is reserved for MCP JSON-RPC transport.
-    builder.Logging.AddConsole(options =>
+    builder.Logging.ClearProviders().AddConsole(options =>
     {
         options.LogToStandardErrorThreshold = LogLevel.Trace;
     });

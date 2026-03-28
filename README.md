@@ -1,58 +1,95 @@
 # QdrantSkillsMCP
 
-A .NET 10 MCP (Model Context Protocol) server for vector-based skill storage and retrieval using Qdrant. Enables AI agents (Claude Code, Copilot, Codex, etc.) to semantically search, load, and manage skills via MCP tools.
+A .NET 10 MCP server for vector-based skill storage and retrieval using Qdrant. Enables AI agents (Claude Code, Copilot, Codex, etc.) to semantically search, load, and manage skills via MCP tools.
 
-## Install
+## Prerequisites
 
-```bash
-# .NET 10+ (ephemeral, no install)
-dnx QdrantSkillsMCP --console help
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (required)
+- A Qdrant instance — local via Docker/Aspire, or a hosted service like [Qdrant Cloud](https://cloud.qdrant.io/)
 
-# Or install globally
-dotnet tool install -g QdrantSkillsMCP
-qdrant-skills-mcp --console help
-```
+## Get Started
 
-## Quick Start
+**No install needed** — `dnx` runs the tool directly from NuGet, always using the latest version:
 
 ```bash
-# Initialize config with local Qdrant preset
-qdrant-skills-mcp --config init
+# Initialize config (creates ~/.qdrant-skills/config.json with local defaults)
+dnx QdrantSkillsMCP -- --config init
 
 # Auto-configure your AI agent (Claude, Copilot, Codex, etc.)
-qdrant-skills-mcp --setup
+dnx QdrantSkillsMCP -- --setup
 
-# Search skills via CLI
-qdrant-skills-mcp --console search "authentication"
-
-# Interactive REPL
-qdrant-skills-mcp --console
+# Verify your Qdrant connection
+dnx QdrantSkillsMCP -- --config validate
 ```
+
+> **What is `dnx`?** It's .NET 10's equivalent of `npx` — runs NuGet tools without installing them. Always gets the latest version automatically.
+
+### Alternative: Global Install
+
+If you prefer a permanent installation (no `dnx` prefix needed):
+
+```bash
+dotnet tool install -g QdrantSkillsMCP
+qdrant-skills-mcp --config init
+qdrant-skills-mcp --setup
+```
+
+Update later with: `dotnet tool update -g QdrantSkillsMCP`
 
 ## Configuration
 
 ```bash
-# Show all config with sources
-qdrant-skills-mcp --config show
+# Show all config with source annotations ([default], [user], [project], [env])
+dnx QdrantSkillsMCP -- --config show
 
-# Set remote Qdrant host
-qdrant-skills-mcp --config set QdrantHost=my-qdrant.example.com
-qdrant-skills-mcp --config set UseTls=true
-qdrant-skills-mcp --config set QdrantApiKey=your-api-key
+# Connect to a remote Qdrant instance
+dnx QdrantSkillsMCP -- --config set QdrantHost=my-qdrant.example.com
+dnx QdrantSkillsMCP -- --config set QdrantGrpcPort=6334
+dnx QdrantSkillsMCP -- --config set UseTls=true
+dnx QdrantSkillsMCP -- --config set QdrantApiKey=your-api-key
 
-# Switch between profiles
-qdrant-skills-mcp --config use cloud
+# Named profiles for switching between environments
+dnx QdrantSkillsMCP -- --config use cloud
 
-# Validate connection
-qdrant-skills-mcp --config validate
+# Validate connection works
+dnx QdrantSkillsMCP -- --config validate
 
-# Generate env var template for your shell
-qdrant-skills-mcp --config env
+# Generate env var template for your shell (auto-detects bash/PowerShell/cmd)
+dnx QdrantSkillsMCP -- --config env
+
+# Interactive config wizard
+dnx QdrantSkillsMCP -- --config
 ```
 
-## MCP Tools
+Config files:
+- **User-level:** `~/.qdrant-skills/config.json` (API keys, personal settings)
+- **Project-level:** `./qdrant-skills.json` (shared team settings)
+- **Precedence:** Environment variables > Project > User > Defaults
 
-When running as an MCP server (default mode), exposes these tools to agents:
+## CLI Usage
+
+```bash
+# Search skills by meaning
+dnx QdrantSkillsMCP -- --console search "authentication patterns"
+
+# List all skills
+dnx QdrantSkillsMCP -- --console list
+
+# JSON output for scripting
+dnx QdrantSkillsMCP -- --console --json search "error handling"
+
+# Interactive REPL with tab completion and history
+dnx QdrantSkillsMCP -- --console
+
+# Show help
+dnx QdrantSkillsMCP -- --console help
+```
+
+## MCP Server Mode
+
+By default (no flags), QdrantSkillsMCP runs as an MCP server over stdio. This is how AI agents connect to it. The `--setup` wizard configures this automatically for your agent.
+
+### Available MCP Tools
 
 | Tool | Description |
 |------|-------------|
@@ -64,16 +101,18 @@ When running as an MCP server (default mode), exposes these tools to agents:
 | `archive-skill` | Soft-hide a skill without deletion |
 | `list-skills` | List all skills (supports `--names` and `--summaries` modes) |
 | `reset-session` | Clear session tracking for loaded skills |
-| `get-skill-guide` | Returns the bundled SKILL.md teaching agents how to use QdrantSkillsMCP |
+| `get-skill-guide` | Returns the bundled guide teaching agents how to use QdrantSkillsMCP |
 
 ## Embedding Providers
 
-Configurable via `--config set EmbeddingProvider=<provider>`:
+Configure via `dnx QdrantSkillsMCP -- --config set EmbeddingProvider=<provider>`:
 
-- **LocalONNX** (default) — all-MiniLM-L6-v2, runs locally, no API key needed
-- **OpenAI** — text-embedding-3-small/large
-- **Ollama** — any Ollama embedding model
-- **AzureOpenAI** — Azure-hosted OpenAI embeddings
+| Provider | Model | Notes |
+|----------|-------|-------|
+| **LocalONNX** (default) | all-MiniLM-L6-v2 | Runs locally, no API key needed, 384 dimensions |
+| **OpenAI** | text-embedding-3-small/large | Requires `OpenAiApiKey` or `OPENAI_API_KEY` env var |
+| **Ollama** | Any Ollama embedding model | Set `EmbeddingUrl` (default: http://localhost:11434) |
+| **AzureOpenAI** | Azure-hosted embeddings | Requires endpoint, key, and deployment name |
 
 ## Development
 
@@ -83,7 +122,10 @@ Requires .NET 10 SDK and Docker (for Qdrant via Aspire).
 # Run with Aspire (starts Qdrant automatically)
 dotnet run --project src/QdrantSkillsMCP.AppHost
 
-# Run tests
+# Run unit tests
+dotnet test tests/QdrantSkillsMCP.UnitTests
+
+# Run all tests (requires Qdrant running)
 dotnet test
 ```
 
