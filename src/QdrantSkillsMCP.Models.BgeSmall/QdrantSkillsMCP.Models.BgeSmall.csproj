@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- This is a content-only package — no compiled code -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+
+    <!-- NuGet metadata -->
+    <PackageId>QdrantSkillsMCP.Models.BgeSmall</PackageId>
+    <Description>Bundled BGE-small-en-v1.5 int8-quantized ONNX model for QdrantSkillsMCP local embeddings. 384 dimensions, ~34 MB. Best value.</Description>
+    <Authors>James Burton</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/jamesburton/QdrantSkillsMCP</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jamesburton/QdrantSkillsMCP</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>onnx;embedding;bge-small-en-v1.5;qdrant;semantic-search;ai</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Versioning -->
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+
+    <!-- Model download properties -->
+    <OnnxModelName>bge-small-en-v1.5</OnnxModelName>
+    <OnnxModelUrl>https://huggingface.co/Xenova/bge-small-en-v1.5/resolve/main/onnx/model_quantized.onnx</OnnxModelUrl>
+    <OnnxTokenizerUrl>https://huggingface.co/Xenova/bge-small-en-v1.5/resolve/main/tokenizer.json</OnnxTokenizerUrl>
+    <OnnxVocabUrl>https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/main/vocab.txt</OnnxVocabUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Content files that land in consuming project's output directory -->
+  <ItemGroup>
+    <Content Include="models/$(OnnxModelName)/**/*"
+             PackagePath="contentFiles/any/any/onnx-models/$(OnnxModelName)/"
+             BuildAction="None"
+             CopyToOutput="true" />
+    <Content Include="models/$(OnnxModelName)/**/*"
+             PackagePath="content/onnx-models/$(OnnxModelName)/"
+             BuildAction="None"
+             CopyToOutput="true" />
+  </ItemGroup>
+
+  <Import Project="..\..\build\OnnxModelDownload.targets" />
+
+</Project>

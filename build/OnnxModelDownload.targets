@@ -1,0 +1,43 @@
+<Project>
+
+  <!--
+    Shared MSBuild targets for downloading ONNX model files from HuggingFace.
+    Each model .csproj sets OnnxModelName, OnnxModelUrl, OnnxTokenizerUrl, OnnxVocabUrl.
+  -->
+
+  <PropertyGroup>
+    <OnnxModelsDir>$(MSBuildProjectDirectory)/models/$(OnnxModelName)/</OnnxModelsDir>
+    <OnnxModelFile>$(OnnxModelsDir)model_quantized.onnx</OnnxModelFile>
+    <OnnxTokenizerFile>$(OnnxModelsDir)tokenizer.json</OnnxTokenizerFile>
+    <OnnxVocabFile>$(OnnxModelsDir)vocab.txt</OnnxVocabFile>
+  </PropertyGroup>
+
+  <Target Name="DownloadOnnxModelFiles" BeforeTargets="Build;Pack"
+          Condition="!Exists('$(OnnxModelFile)') Or !Exists('$(OnnxTokenizerFile)') Or !Exists('$(OnnxVocabFile)')">
+
+    <MakeDir Directories="$(OnnxModelsDir)" />
+
+    <Message Importance="high" Text="Downloading ONNX model files for $(OnnxModelName)..." />
+
+    <DownloadFile SourceUrl="$(OnnxModelUrl)"
+                  DestinationFolder="$(OnnxModelsDir)"
+                  DestinationFileName="model_quantized.onnx"
+                  Condition="!Exists('$(OnnxModelFile)')"
+                  SkipUnchangedFiles="true" />
+
+    <DownloadFile SourceUrl="$(OnnxTokenizerUrl)"
+                  DestinationFolder="$(OnnxModelsDir)"
+                  DestinationFileName="tokenizer.json"
+                  Condition="!Exists('$(OnnxTokenizerFile)')"
+                  SkipUnchangedFiles="true" />
+
+    <DownloadFile SourceUrl="$(OnnxVocabUrl)"
+                  DestinationFolder="$(OnnxModelsDir)"
+                  DestinationFileName="vocab.txt"
+                  Condition="!Exists('$(OnnxVocabFile)')"
+                  SkipUnchangedFiles="true" />
+
+    <Message Importance="high" Text="ONNX model files for $(OnnxModelName) ready at $(OnnxModelsDir)" />
+  </Target>
+
+</Project>
