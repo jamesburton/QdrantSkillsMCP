@@ -98,7 +98,8 @@ public static class ConfigCommand
         var projectScope = args.Contains("--project");
 
         await configManager.SetValueAsync(key, value, projectScope);
-        Console.WriteLine($"Set {key} = {value}{(projectScope ? " [project]" : " [user]")}");
+        var displayValue = SecretMask.IsSecret(key) ? SecretMask.Mask(value) : value;
+        Console.WriteLine($"Set {key} = {displayValue}{(projectScope ? " [project]" : " [user]")}");
         return 0;
     }
 

@@ -152,6 +152,7 @@ public sealed class ConfigManager
         };
 
         await File.WriteAllTextAsync(UserConfigPath, root.ToJsonString(WriteOptions));
+        SetUserOnlyPermissions(UserConfigPath);
     }
 
     /// <summary>
@@ -184,6 +185,7 @@ public sealed class ConfigManager
 
         BackupFile(UserConfigPath);
         await File.WriteAllTextAsync(UserConfigPath, root.ToJsonString(WriteOptions));
+        SetUserOnlyPermissions(UserConfigPath);
     }
 
     /// <summary>
@@ -219,6 +221,7 @@ public sealed class ConfigManager
 
         BackupFile(UserConfigPath);
         await File.WriteAllTextAsync(UserConfigPath, root.ToJsonString(WriteOptions));
+        SetUserOnlyPermissions(UserConfigPath);
     }
 
     /// <summary>
@@ -347,6 +350,7 @@ public sealed class ConfigManager
         root["profiles"]![activeProfile]![QdrantSkillsOptions.SectionName]![key] = value;
 
         await File.WriteAllTextAsync(UserConfigPath, root.ToJsonString(WriteOptions));
+        SetUserOnlyPermissions(UserConfigPath);
     }
 
     private async Task WriteProjectValueAsync(string key, string value)
@@ -377,6 +381,18 @@ public sealed class ConfigManager
     {
         if (File.Exists(path))
             File.Copy(path, path + ".bak", overwrite: true);
+    }
+
+    /// <summary>
+    /// Restricts a config file to owner-only permissions on Unix (rw-------).
+    /// No-op on Windows where ACLs are used instead.
+    /// </summary>
+    private static void SetUserOnlyPermissions(string path)
+    {
+        if (!OperatingSystem.IsWindows() && File.Exists(path))
+        {
+            File.SetUnixFileMode(path, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+        }
     }
 
     private static IReadOnlyList<string> GetConfigurableKeys()
