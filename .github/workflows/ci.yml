@@ -52,6 +52,9 @@ jobs:
         with:
           dotnet-version: "10.x"
 
+      - name: Restore and build
+        run: dotnet build src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj -c Release
+
       - name: Pack with tag version
         run: dotnet pack src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj -c Release -o ./artifacts
 

@@ -12,9 +12,6 @@
     <Description>MCP server for semantic skill search and retrieval using Qdrant. Provides vector-based skill storage, semantic search, and multi-agent setup via CLI and MCP tools.</Description>
     <PackageOutputPath>./nupkg</PackageOutputPath>
     <CreateRidSpecificToolPackages>false</CreateRidSpecificToolPackages>
-    <!-- Exclude ONNX native runtimes from tool package to stay under NuGet 250MB limit.
-         Users who need ONNX must have the runtime installed or it auto-resolves from NuGet cache. -->
-    <PublishRelatedItemExcludeFilter>runtimes/**/*onnxruntime*</PublishRelatedItemExcludeFilter>
 
     <!-- NuGet metadata -->
     <Authors>James Burton</Authors>
@@ -57,5 +54,16 @@
     <EmbeddedResource Include="SkillGuide\FrequentSkills.md" />
     <EmbeddedResource Include="SkillGuide\EnableSkillSearch.md" />
   </ItemGroup>
+
+  <!-- Strip ONNX native runtimes from publish output before pack.
+       Reduces tool package from ~255MB to ~8MB. ONNX users get natives from NuGet cache at runtime. -->
+  <Target Name="RemoveOnnxNativesFromPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_OnnxNatives Include="$(PublishDir)runtimes\**\*onnxruntime*" />
+      <_OnnxNatives Include="$(PublishDir)runtimes/**/*onnxruntime*" />
+    </ItemGroup>
+    <Delete Files="@(_OnnxNatives)" />
+    <RemoveDir Directories="$(PublishDir)runtimes" Condition="Exists('$(PublishDir)runtimes')" />
+  </Target>
 
 </Project>
