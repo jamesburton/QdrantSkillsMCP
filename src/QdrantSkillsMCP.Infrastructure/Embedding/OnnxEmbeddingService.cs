@@ -32,10 +32,11 @@ public sealed class OnnxEmbeddingService : IEmbeddingService
         {
             // Use configured dimensions only if explicitly set to a non-default value
             // that isn't the OpenAI default (1536) or the ONNX default (384).
+            var modelDims = OnnxModelResolver.GetModelDimensions(_options.OnnxModelName);
             var configured = _options.VectorDimensions;
-            if (configured != 1536 && configured != DefaultOnnxDimensions)
+            if (configured != 1536 && configured != DefaultOnnxDimensions && configured != modelDims)
                 return configured;
-            return DefaultOnnxDimensions;
+            return modelDims;
         }
     }
 

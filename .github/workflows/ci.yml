@@ -45,8 +45,14 @@ jobs:
       - name: Integration Tests (non-Aspire)
         run: dotnet test tests/QdrantSkillsMCP.IntegrationTests --no-build -c Release --filter "Category!=Aspire"
 
-      - name: Pack
+      - name: Pack main tool
         run: dotnet pack src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj -c Release --no-build -o ./artifacts
+
+      - name: Pack model packages
+        run: |
+          dotnet pack src/QdrantSkillsMCP.Models.MiniLM/QdrantSkillsMCP.Models.MiniLM.csproj -c Release -o ./artifacts
+          dotnet pack src/QdrantSkillsMCP.Models.BgeSmall/QdrantSkillsMCP.Models.BgeSmall.csproj -c Release -o ./artifacts
+          dotnet pack src/QdrantSkillsMCP.Models.BgeBase/QdrantSkillsMCP.Models.BgeBase.csproj -c Release -o ./artifacts
 
       - name: Upload Package Artifact
         uses: actions/upload-artifact@v4
@@ -73,7 +79,11 @@ jobs:
         run: dotnet build src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj -c Release
 
       - name: Pack with tag version
-        run: dotnet pack src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj -c Release -o ./artifacts
+        run: |
+          dotnet pack src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj -c Release -o ./artifacts
+          dotnet pack src/QdrantSkillsMCP.Models.MiniLM/QdrantSkillsMCP.Models.MiniLM.csproj -c Release -o ./artifacts
+          dotnet pack src/QdrantSkillsMCP.Models.BgeSmall/QdrantSkillsMCP.Models.BgeSmall.csproj -c Release -o ./artifacts
+          dotnet pack src/QdrantSkillsMCP.Models.BgeBase/QdrantSkillsMCP.Models.BgeBase.csproj -c Release -o ./artifacts
 
       - name: Publish to NuGet.org
         run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

@@ -44,6 +44,12 @@ public sealed class QdrantSkillsOptions
     /// <summary>URL override for Ollama embedding endpoint (e.g. http://localhost:11434).</summary>
     public string? EmbeddingUrl { get; set; }
 
+    /// <summary>
+    /// ONNX model name to use for local embeddings.
+    /// Supported: "all-MiniLM-L6-v2" (default), "bge-small-en-v1.5", "bge-base-en-v1.5".
+    /// </summary>
+    public string? OnnxModelName { get; set; }
+
     /// <summary>Explicit path to a custom ONNX model file. Null uses the bundled default.</summary>
     public string? OnnxModelPath { get; set; }
 

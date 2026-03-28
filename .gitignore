@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Downloaded ONNX model files (fetched during build)
+src/QdrantSkillsMCP.Models.*/models/

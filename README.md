@@ -103,6 +103,31 @@ By default (no flags), QdrantSkillsMCP runs as an MCP server over stdio. This is
 | `reset-session` | Clear session tracking for loaded skills |
 | `get-skill-guide` | Returns the bundled guide teaching agents how to use QdrantSkillsMCP |
 
+## ONNX Model Packages
+
+For local embedding without API keys, install a companion model package:
+
+| Package | Model | Size | Quality | Dims |
+|---------|-------|------|---------|------|
+| `QdrantSkillsMCP.Models.MiniLM` | all-MiniLM-L6-v2 | ~23 MB | Fastest | 384 |
+| `QdrantSkillsMCP.Models.BgeSmall` | BGE-small-en-v1.5 | ~34 MB | Best value | 384 |
+| `QdrantSkillsMCP.Models.BgeBase` | BGE-base-en-v1.5 | ~105 MB | Highest quality | 768 |
+
+Install alongside the main tool:
+
+```bash
+dotnet tool install -g QdrantSkillsMCP
+dotnet tool install -g QdrantSkillsMCP.Models.BgeSmall
+```
+
+To select a non-default model:
+
+```bash
+dnx QdrantSkillsMCP -- --config set OnnxModelName=bge-small-en-v1.5
+```
+
+Without a companion package, the tool auto-downloads all-MiniLM-L6-v2 on first use.
+
 ## Embedding Providers
 
 Configure via `dnx QdrantSkillsMCP -- --config set EmbeddingProvider=<provider>`:

@@ -3,6 +3,9 @@
     <Project Path="src/QdrantSkillsMCP.AppHost/QdrantSkillsMCP.AppHost.csproj" />
     <Project Path="src/QdrantSkillsMCP.Core/QdrantSkillsMCP.Core.csproj" />
     <Project Path="src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj" />
+    <Project Path="src/QdrantSkillsMCP.Models.MiniLM/QdrantSkillsMCP.Models.MiniLM.csproj" />
+    <Project Path="src/QdrantSkillsMCP.Models.BgeSmall/QdrantSkillsMCP.Models.BgeSmall.csproj" />
+    <Project Path="src/QdrantSkillsMCP.Models.BgeBase/QdrantSkillsMCP.Models.BgeBase.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/QdrantSkillsMCP.IntegrationTests/QdrantSkillsMCP.IntegrationTests.csproj" />
