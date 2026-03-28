@@ -4,14 +4,31 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>QdrantSkillsMCP.Infrastructure</RootNamespace>
     <NoWarn>$(NoWarn);SKEXP0070</NoWarn>
+
+    <!-- NuGet tool packaging -->
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>qdrant-skills-mcp</ToolCommandName>
     <PackageId>QdrantSkillsMCP</PackageId>
-    <Description>MCP server for semantic skill search and retrieval using Qdrant</Description>
+    <Description>MCP server for semantic skill search and retrieval using Qdrant. Provides vector-based skill storage, semantic search, and multi-agent setup via CLI and MCP tools.</Description>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <CreateRidSpecificToolPackages>false</CreateRidSpecificToolPackages>
+
+    <!-- NuGet metadata -->
+    <Authors>James Burton</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/jamesburton/QdrantSkillsMCP</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jamesburton/QdrantSkillsMCP</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>mcp;qdrant;skills;semantic-search;ai;claude;copilot;vector-database</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.Onnx" Version="1.74.0-alpha" />
     <PackageReference Include="ModelContextProtocol" Version="1.1.0" />
