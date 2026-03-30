@@ -149,15 +149,27 @@ public static class OnnxModelResolver
     {
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
 
-        using var httpClient = new HttpClient();
-        httpClient.Timeout = TimeSpan.FromMinutes(5);
+        var tmp = destination + ".tmp";
+        try
+        {
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        using var response = httpClient.GetAsync(url).GetAwaiter().GetResult();
-        response.EnsureSuccessStatusCode();
+            using var response = httpClient.GetAsync(url).GetAwaiter().GetResult();
+            response.EnsureSuccessStatusCode();
 
-        using var stream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
-        using var fileStream = File.Create(destination);
-        stream.CopyTo(fileStream);
+            using var stream = response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+            using (var fileStream = File.Create(tmp))
+                stream.CopyTo(fileStream);
+
+            File.Move(tmp, destination, overwrite: true);
+        }
+        catch
+        {
+            if (File.Exists(tmp))
+                File.Delete(tmp);
+            throw;
+        }
     }
 
     private sealed record ModelInfo(

@@ -71,8 +71,14 @@ public sealed class ConfigManager
     /// Sets a config value. Writes to user config (active profile) or project config.
     /// Creates a .bak backup before writing.
     /// </summary>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="key"/> is not a known configurable key.</exception>
     public async Task SetValueAsync(string key, string value, bool projectScope = false)
     {
+        if (!ConfigurableKeys.Contains(key))
+            throw new ArgumentException(
+                $"Unknown config key '{key}'. Known keys: {string.Join(", ", ConfigurableKeys)}",
+                nameof(key));
+
         if (projectScope)
         {
             await WriteProjectValueAsync(key, value);

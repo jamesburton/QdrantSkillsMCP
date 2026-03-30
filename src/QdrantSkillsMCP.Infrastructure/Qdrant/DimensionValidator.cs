@@ -120,28 +120,23 @@ public sealed class DimensionValidator : IHostedService
                 var oldName = $"{_options.CollectionName}-old-{existingDims}";
                 _logger.LogWarning(
                     "Dimension mismatch in '{CollectionName}': existing={ExistingDims}, provider={ProviderDims}. " +
-                    "Renaming old collection to '{OldName}' (old data preserved). " +
-                    "A new collection will be created by CollectionInitializer.",
-                    _options.CollectionName, existingDims, providerDims, oldName);
+                    "Strategy=rename: existing collection '{CollectionName}' will be DELETED (DATA LOSS — Qdrant does not support rename). " +
+                    "An empty placeholder collection '{OldName}' will be created to record the old dimension count. " +
+                    "A new {ProviderDims}-dim collection will be created by CollectionInitializer. " +
+                    "To avoid data loss, export your skills before changing embedding providers.",
+                    _options.CollectionName, existingDims, providerDims, _options.CollectionName, oldName, providerDims);
 
-                // Qdrant doesn't support rename directly. Create alias-based preservation:
-                // 1. Create a new empty collection with the old-name to hold the alias reference
-                // 2. Actually, the simplest approach: create a snapshot name. Since Qdrant can't rename,
-                //    we create a new collection with the old name and copy... but that's expensive.
-                //    Instead: just delete and let CollectionInitializer recreate. The old name serves as documentation.
-                // For now: create a collection with the backup name at the existing dimensions,
-                // then note the original is being replaced.
+                await _client.DeleteCollectionAsync(_options.CollectionName, cancellationToken: ct);
+
                 await _client.CreateCollectionAsync(
                     oldName,
                     new VectorParams { Size = (ulong)existingDims, Distance = Distance.Cosine },
                     cancellationToken: ct);
 
                 _logger.LogWarning(
-                    "Created backup collection '{OldName}' with {ExistingDims}-dim vectors. " +
-                    "Original collection '{CollectionName}' will be deleted and recreated with {ProviderDims}-dim vectors.",
-                    oldName, existingDims, _options.CollectionName, providerDims);
-
-                await _client.DeleteCollectionAsync(_options.CollectionName, cancellationToken: ct);
+                    "Deleted '{CollectionName}'. Created empty placeholder '{OldName}' ({ExistingDims}-dim). " +
+                    "CollectionInitializer will create a fresh '{CollectionName}' with {ProviderDims}-dim vectors.",
+                    _options.CollectionName, oldName, existingDims, _options.CollectionName, providerDims);
                 break;
 
             case "suffix":

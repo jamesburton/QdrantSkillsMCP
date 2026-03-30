@@ -31,7 +31,8 @@ COPY --from=build /app/publish .
 
 # Default environment — override at runtime via -e or docker-compose
 ENV ASPNETCORE_ENVIRONMENT=Production \
-    QdrantSkills__QdrantUrl=http://qdrant:6334 \
+    QdrantSkills__QdrantHost=qdrant \
+    QdrantSkills__QdrantGrpcPort=6334 \
     QdrantSkills__CollectionName=skills \
     QdrantSkills__EmbeddingProvider=openai
 
