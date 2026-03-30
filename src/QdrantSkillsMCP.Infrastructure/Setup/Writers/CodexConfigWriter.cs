@@ -18,13 +18,13 @@ internal sealed class CodexConfigWriter : IAgentConfigWriter
     public string? DetectInstallation(AgentScope scope)
     {
         var path = GetConfigPath(scope);
-        if (File.Exists(path))
-            return path;
+        if (File.Exists(path)) return path;
         var dir = Path.GetDirectoryName(path);
-        if (dir is not null && Directory.Exists(dir))
-            return path;
+        if (dir is not null && Directory.Exists(dir)) return path;
         return null;
     }
+
+    public string? GetDefaultPath(AgentScope scope) => GetConfigPath(scope);
 
     public async Task WriteConfigAsync(string configPath, McpServerEntry entry)
     {

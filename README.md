@@ -105,7 +105,7 @@ By default (no flags), QdrantSkillsMCP runs as an MCP server over stdio. This is
 
 ## ONNX Model Packages
 
-For local embedding without API keys, install a companion model package:
+For local embedding without API keys, three pre-built model packages are available:
 
 | Package | Model | Size | Quality | Dims |
 |---------|-------|------|---------|------|
@@ -113,20 +113,24 @@ For local embedding without API keys, install a companion model package:
 | `QdrantSkillsMCP.Models.BgeSmall` | BGE-small-en-v1.5 | ~34 MB | Best value | 384 |
 | `QdrantSkillsMCP.Models.BgeBase` | BGE-base-en-v1.5 | ~105 MB | Highest quality | 768 |
 
-Install alongside the main tool:
+> **Without a companion package**, the tool auto-downloads `all-MiniLM-L6-v2` from HuggingFace on first use (~23 MB, requires internet). This works with no setup.
+
+To pre-install a model, add it to your NuGet global cache (works without a project):
 
 ```bash
-dotnet tool install -g QdrantSkillsMCP
-dotnet tool install -g QdrantSkillsMCP.Models.BgeSmall
+# Create a temp project, restore, then discard — populates the NuGet cache
+dotnet new console -o /tmp/model-install --no-restore
+dotnet add /tmp/model-install package QdrantSkillsMCP.Models.BgeSmall
+dotnet restore /tmp/model-install
 ```
 
-To select a non-default model:
+The tool auto-detects the model in `~/.nuget/packages/qdrantskillsmcp.models.bgesmall/` on startup.
+
+Then select it:
 
 ```bash
 dnx QdrantSkillsMCP -- --config set OnnxModelName=bge-small-en-v1.5
 ```
-
-Without a companion package, the tool auto-downloads all-MiniLM-L6-v2 on first use.
 
 ## Embedding Providers
 

@@ -25,6 +25,13 @@ public interface IAgentConfigWriter
     string? DetectInstallation(AgentScope scope);
 
     /// <summary>
+    /// Returns the expected config file path for this agent at the given scope,
+    /// regardless of whether the file or its parent directory currently exists.
+    /// Returns null for unsupported scopes or snippet-only writers.
+    /// </summary>
+    string? GetDefaultPath(AgentScope scope);
+
+    /// <summary>
     /// Path where SKILL.md should be placed for this agent, or null if the agent
     /// does not support skill directories.
     /// </summary>

@@ -42,6 +42,10 @@ public sealed class ConsoleHost
         var command = remaining[0].ToLowerInvariant();
         var commandArgs = remaining.Skip(1).ToArray();
 
+        // help/exit don't need DI — handle before any service resolution
+        if (command is "help" or "exit" or "quit")
+            return PrintHelp();
+
         try
         {
             return command switch
@@ -66,10 +70,31 @@ public sealed class ConsoleHost
         }
     }
 
+    private static int PrintHelp()
+    {
+        Console.WriteLine("QdrantSkillsMCP CLI");
+        Console.WriteLine();
+        Console.WriteLine("Commands:");
+        Console.WriteLine("  search <query>   Semantic search for skills");
+        Console.WriteLine("  list             List all skills");
+        Console.WriteLine("  load <name>      Load a specific skill by name");
+        Console.WriteLine("  add              Add a new skill (reads from stdin or prompts)");
+        Console.WriteLine("  update <name>    Update an existing skill");
+        Console.WriteLine("  delete <name>    Delete a skill");
+        Console.WriteLine("  archive <name>   Archive (soft-hide) a skill");
+        Console.WriteLine("  status           Show connection status and collection info");
+        Console.WriteLine("  help             Show this help message");
+        Console.WriteLine("  exit             Exit the CLI");
+        Console.WriteLine();
+        Console.WriteLine("Flags:");
+        Console.WriteLine("  --json           Output results as JSON");
+        return 0;
+    }
+
     private static int UnknownCommand(string command)
     {
         Console.Error.WriteLine($"Unknown command: {command}");
-        Console.Error.WriteLine("Available commands: search, list, load, add, update, delete, archive, status, help, exit");
+        Console.Error.WriteLine("Run 'help' to see available commands.");
         return 1;
     }
 }

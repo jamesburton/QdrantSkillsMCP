@@ -4,18 +4,18 @@ using QdrantSkillsMCP.Infrastructure.Configuration;
 namespace QdrantSkillsMCP.Infrastructure.Embedding;
 
 /// <summary>
-/// Resolves ONNX model and vocabulary file paths using a three-tier strategy:
+/// Resolves ONNX model and vocabulary file paths using a four-tier strategy:
 /// 1. Explicit config path (OnnxModelPath)
-/// 2. Companion NuGet package location (onnx-models/{model-name}/)
-/// 3. Auto-download from HuggingFace
+/// 2a. AppContext.BaseDirectory onnx-models/ subdirectory
+/// 2b. NuGet global packages cache (companion QdrantSkillsMCP.Models.* package)
+/// 3. Auto-download from HuggingFace (cached to LocalApplicationData)
 /// </summary>
 public static class OnnxModelResolver
 {
     private const string DefaultModelName = "all-MiniLM-L6-v2";
 
     /// <summary>
-    /// Maps model names to their HuggingFace download URLs.
-    /// Keys: model file name, tokenizer file name, vocab file name.
+    /// Maps model names to their HuggingFace download URLs and companion NuGet package ID.
     /// </summary>
     private static readonly Dictionary<string, ModelInfo> KnownModels = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -23,17 +23,20 @@ public static class OnnxModelResolver
             ModelUrl: "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/main/onnx/model_quantized.onnx",
             TokenizerUrl: "https://huggingface.co/Xenova/all-MiniLM-L6-v2/resolve/main/tokenizer.json",
             VocabUrl: "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/vocab.txt",
-            Dimensions: 384),
+            Dimensions: 384,
+            NuGetPackageId: "qdrantskillsmcp.models.minilm"),
         ["bge-small-en-v1.5"] = new(
             ModelUrl: "https://huggingface.co/Xenova/bge-small-en-v1.5/resolve/main/onnx/model_quantized.onnx",
             TokenizerUrl: "https://huggingface.co/Xenova/bge-small-en-v1.5/resolve/main/tokenizer.json",
             VocabUrl: "https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/main/vocab.txt",
-            Dimensions: 384),
+            Dimensions: 384,
+            NuGetPackageId: "qdrantskillsmcp.models.bgesmall"),
         ["bge-base-en-v1.5"] = new(
             ModelUrl: "https://huggingface.co/Xenova/bge-base-en-v1.5/resolve/main/onnx/model_quantized.onnx",
             TokenizerUrl: "https://huggingface.co/Xenova/bge-base-en-v1.5/resolve/main/tokenizer.json",
             VocabUrl: "https://huggingface.co/BAAI/bge-base-en-v1.5/resolve/main/vocab.txt",
-            Dimensions: 768),
+            Dimensions: 768,
+            NuGetPackageId: "qdrantskillsmcp.models.bgebase"),
     };
 
     private static string CacheDirectory =>
@@ -93,12 +96,11 @@ public static class OnnxModelResolver
                 explicitPath);
         }
 
-        // Tier 2: Companion NuGet package location (content files land in onnx-models/{model-name}/)
+        // Tier 2a: Companion NuGet package location (AppContext.BaseDirectory/onnx-models/{model-name}/)
         var nugetPath = Path.Combine(AppContext.BaseDirectory, "onnx-models", modelName, fileName);
         if (File.Exists(nugetPath))
         {
-            logger.LogInformation(
-                "Using companion NuGet ONNX file: {Path}", nugetPath);
+            logger.LogInformation("Using companion ONNX file: {Path}", nugetPath);
             return nugetPath;
         }
 
@@ -106,9 +108,19 @@ public static class OnnxModelResolver
         var flatPath = Path.Combine(AppContext.BaseDirectory, fileName);
         if (File.Exists(flatPath))
         {
-            logger.LogInformation(
-                "Using companion NuGet ONNX file (flat): {Path}", flatPath);
+            logger.LogInformation("Using companion ONNX file (flat): {Path}", flatPath);
             return flatPath;
+        }
+
+        // Tier 2b: NuGet global packages cache (companion QdrantSkillsMCP.Models.* package)
+        if (KnownModels.TryGetValue(modelName, out var modelInfoForCache))
+        {
+            var nugetCachePath = FindInNuGetCache(modelInfoForCache.NuGetPackageId, modelName, fileName);
+            if (nugetCachePath is not null)
+            {
+                logger.LogInformation("Using NuGet cache ONNX file: {Path}", nugetCachePath);
+                return nugetCachePath;
+            }
         }
 
         // Tier 3: Auto-download from HuggingFace
@@ -145,6 +157,44 @@ public static class OnnxModelResolver
         return cachedPath;
     }
 
+    /// <summary>
+    /// Scans the NuGet global packages cache for a companion model package.
+    /// The package stores model files under contentFiles/any/any/onnx-models/{modelName}/.
+    /// </summary>
+    private static string? FindInNuGetCache(string packageId, string modelName, string fileName)
+    {
+        // Resolve NuGet global packages folder (respects NUGET_PACKAGES env var)
+        var nugetPackagesRoot = Environment.GetEnvironmentVariable("NUGET_PACKAGES")
+            ?? Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".nuget", "packages");
+
+        var packageDir = Path.Combine(nugetPackagesRoot, packageId);
+        if (!Directory.Exists(packageDir))
+            return null;
+
+        // Find latest version directory (lexicographic sort is good enough for semver)
+        var versionDirs = Directory.GetDirectories(packageDir);
+        if (versionDirs.Length == 0)
+            return null;
+
+        Array.Sort(versionDirs);
+        var latestVersionDir = versionDirs[^1];
+
+        // contentFiles layout (SDK-style)
+        var contentFilesPath = Path.Combine(
+            latestVersionDir, "contentfiles", "any", "any", "onnx-models", modelName, fileName);
+        if (File.Exists(contentFilesPath))
+            return contentFilesPath;
+
+        // content layout (packages.config-style, also available in cache)
+        var contentPath = Path.Combine(latestVersionDir, "content", "onnx-models", modelName, fileName);
+        if (File.Exists(contentPath))
+            return contentPath;
+
+        return null;
+    }
+
     private static void DownloadFile(string url, string destination)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
@@ -176,5 +226,6 @@ public static class OnnxModelResolver
         string ModelUrl,
         string TokenizerUrl,
         string VocabUrl,
-        int Dimensions);
+        int Dimensions,
+        string NuGetPackageId);
 }

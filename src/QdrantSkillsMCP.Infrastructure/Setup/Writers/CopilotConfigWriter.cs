@@ -16,9 +16,11 @@ internal sealed class CopilotConfigWriter : JsonConfigWriterBase
     public override string? DetectInstallation(AgentScope scope)
     {
         if (scope != AgentScope.Project) return null;
-        var path = GetConfigPath();
-        return DetectIfExists(path);
+        return DetectIfExists(GetConfigPath());
     }
+
+    public override string? GetDefaultPath(AgentScope scope) =>
+        scope == AgentScope.Project ? GetConfigPath() : null;
 
     protected override JsonObject BuildServerNode(McpServerEntry entry)
     {

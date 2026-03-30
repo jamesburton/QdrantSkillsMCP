@@ -28,6 +28,9 @@ internal sealed class ZedConfigWriter : IAgentConfigWriter
         return null;
     }
 
+    public string? GetDefaultPath(AgentScope scope) =>
+        scope == AgentScope.User ? GetConfigPath() : null;
+
     public async Task WriteConfigAsync(string configPath, McpServerEntry entry)
     {
         // Backup existing file

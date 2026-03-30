@@ -262,8 +262,5 @@ public sealed class SetupWizard
         new("qdrant-skills-mcp", "dnx", ["qdrant-skills-mcp"]);
 
     private static string? GetDefaultConfigPath(IAgentConfigWriter writer, AgentScope scope)
-    {
-        // Use DetectInstallation which constructs default paths
-        return writer.DetectInstallation(scope);
-    }
+        => writer.GetDefaultPath(scope);
 }

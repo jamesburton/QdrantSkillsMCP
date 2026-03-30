@@ -11,11 +11,9 @@ internal sealed class KiloCodeConfigWriter : JsonConfigWriterBase
     public override AgentScope[] SupportedScopes => [AgentScope.User, AgentScope.Project];
     protected override string RootKey => "mcpServers";
 
-    public override string? DetectInstallation(AgentScope scope)
-    {
-        var path = GetConfigPath(scope);
-        return DetectIfExists(path);
-    }
+    public override string? DetectInstallation(AgentScope scope) => DetectIfExists(GetConfigPath(scope));
+
+    public override string? GetDefaultPath(AgentScope scope) => GetConfigPath(scope);
 
     private static string GetConfigPath(AgentScope scope) => scope switch
     {

@@ -14,9 +14,11 @@ internal sealed class CursorConfigWriter : JsonConfigWriterBase
     public override string? DetectInstallation(AgentScope scope)
     {
         if (scope != AgentScope.Project) return null;
-        var path = GetConfigPath();
-        return DetectIfExists(path);
+        return DetectIfExists(GetConfigPath());
     }
+
+    public override string? GetDefaultPath(AgentScope scope) =>
+        scope == AgentScope.Project ? GetConfigPath() : null;
 
     private static string GetConfigPath() =>
         Path.Combine(Directory.GetCurrentDirectory(), ".cursor", "mcp.json");

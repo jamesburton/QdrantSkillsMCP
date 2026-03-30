@@ -19,6 +19,7 @@ internal abstract class JsonConfigWriterBase : IAgentConfigWriter
     public virtual bool CanAutoWrite => true;
     public abstract AgentScope[] SupportedScopes { get; }
     public abstract string? DetectInstallation(AgentScope scope);
+    public abstract string? GetDefaultPath(AgentScope scope);
     public virtual string? SkillDirectoryPath => null;
 
     /// <summary>The root key under which MCP servers are stored (e.g., "mcpServers", "servers", "mcp").</summary>

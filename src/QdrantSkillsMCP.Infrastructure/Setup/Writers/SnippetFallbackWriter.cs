@@ -16,6 +16,7 @@ internal sealed class SnippetFallbackWriter : IAgentConfigWriter
     public string? SkillDirectoryPath => null;
 
     public string? DetectInstallation(AgentScope scope) => null; // Never auto-detected
+    public string? GetDefaultPath(AgentScope scope) => null; // Snippet-only, no file path
 
     public Task WriteConfigAsync(string configPath, McpServerEntry entry)
     {
