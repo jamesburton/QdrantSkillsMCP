@@ -67,6 +67,11 @@ public sealed class QdrantSkillsOptions
     /// <summary>Azure OpenAI deployment name.</summary>
     public string? AzureOpenAiDeployment { get; set; }
 
+    // --- HTTP transport configuration ---
+
+    /// <summary>Listen URL for HTTP transport. Default: http://localhost:8080. Per D-06.</summary>
+    public string? Url { get; set; }
+
     // --- Validation and migration ---
 
     /// <summary>When true, skips embedding output dimension validation at startup.</summary>
