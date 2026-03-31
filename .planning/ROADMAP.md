@@ -37,13 +37,14 @@ Full phase details: [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADM
 ### Phase 5: HTTP Transport
 **Goal**: Server runs over HTTP with Streamable HTTP and legacy SSE transports while preserving identical stdio behavior
 **Depends on**: Phase 4 (v1.0 complete)
-**Requirements**: TRANS-01, TRANS-02, TRANS-03, TRANS-04, TRANS-05, TRANS-06, TRANS-07, TRANS-08, TRANS-09, TRANS-10
+**Requirements**: TRANS-01, TRANS-02, TRANS-03, TRANS-04, TRANS-05, TRANS-06, TRANS-07, TRANS-08, TRANS-09, TRANS-10, TRANS-11, TRANS-12, TRANS-13
 **Success Criteria** (what must be TRUE):
   1. Running with `--http` starts an HTTP server serving both Streamable HTTP and legacy SSE via single `MapMcp()` call
   2. Running with no transport flag (or `--stdio`) works identically to v1.0 — no regressions in existing MCP tool behavior
   3. GET /health returns a liveness response suitable for container health probes (degraded, not unhealthy, when Qdrant is down)
   4. `dotnet pack` produces a valid NuGet tool package that installs and runs correctly with the ASP.NET Core FrameworkReference included
   5. Dockerfile defaults to `--http` mode on port 8080
+  6. Qdrant connection supports gRPC, gRPC-Web, and REST protocols — configurable via `QdrantProtocol` config key and `--qdrant-grpc`/`--qdrant-http` flags
 **Plans:** 3 plans
 Plans:
 - [x] 05-01-PLAN.md — Package upgrades and PackAsTool + FrameworkReference validation
