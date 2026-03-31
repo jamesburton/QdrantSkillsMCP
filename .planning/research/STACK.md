@@ -1,194 +1,423 @@
-# Stack Research
+# Stack Research -- v1.1 Shared Server
 
-**Domain:** .NET MCP Server with Qdrant Vector Storage
-**Researched:** 2026-03-25
-**Confidence:** HIGH
+**Researched:** 2026-03-31
+**Overall confidence:** HIGH (all packages verified against NuGet and official SDK docs)
 
-## Recommended Stack
+> This file covers ONLY the new stack additions for v1.1. The v1.0 stack (ModelContextProtocol, Qdrant.Client, Aspire, XUnit v3, etc.) is validated and unchanged unless noted.
 
-### Core Technologies
+---
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| .NET 10 (LTS) | 10.0 | Runtime and SDK | GA since Nov 2025. LTS with 3 years of support. Required for `dnx` tool runner, latest Aspire compatibility, and C# 14 features. |
-| ModelContextProtocol | 1.1.0 | MCP server SDK | Official C# SDK maintained by Microsoft + Anthropic. 5.2M downloads. Provides `AddMcpServer()`, `WithStdioServerTransport()`, `WithToolsFromAssembly()` — exactly the pattern this project needs. Use the main package (not `.Core` or `.AspNetCore`) since we want DI + stdio, not HTTP. |
-| Qdrant.Client | 1.17.0 | Vector database client | Official .NET client from Qdrant. gRPC-based, targets .NET 6+/netstandard2.0. Directly registered by Aspire integration. |
-| Aspire | 13.x (latest 13.2.0) | Local dev orchestration and testing | Aspire rebranded/re-versioned in Nov 2025 (jumped from 9.x to 13). Supports .NET 8/9/10. Has first-party Qdrant hosting integration. Use 13.x, NOT 9.2 — the project constraint "Aspire v9.2" is outdated; 13.x is the current stable line. |
-| Microsoft.Extensions.AI | 10.4.x | Embedding abstraction layer | GA (no longer preview). Provides `IEmbeddingGenerator<string, Embedding<float>>` — the standard .NET abstraction for pluggable embedding providers. 3M+ downloads. This is THE way to do configurable embeddings in .NET. |
-| xUnit v3 | 3.2.2 | Test framework | Latest stable with MTP (Microsoft Testing Platform) support. Use `xunit.v3` meta-package. Set `<UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>` in test projects. |
+## HTTP Transports
 
-### Embedding Providers (Pluggable via Microsoft.Extensions.AI)
+### Package Changes
 
-| Provider Package | Version | Purpose | When to Use |
-|-----------------|---------|---------|-------------|
-| Microsoft.Extensions.AI.OpenAI | 10.4.1 | OpenAI / Azure OpenAI embeddings | Cloud users wanting text-embedding-3-small/large. Also works with any OpenAI-compatible endpoint. |
-| OllamaSharp | 5.4.16 | Local Ollama embeddings | Users running Ollama locally. Implements `IEmbeddingGenerator` natively. Recommended over deprecated `Microsoft.Extensions.AI.Ollama`. |
-| SmartComponents.LocalEmbeddings | latest | Fully local ONNX embeddings | Users wanting zero-network, in-process embeddings. Small model, fast, no external dependencies. |
+| Package | Current | Target | Action | Why |
+|---------|---------|--------|--------|-----|
+| `ModelContextProtocol` | 1.1.0 | 1.2.0 | **Upgrade** | Latest stable (published 2026-03-27). v1.2.0 disables legacy SSE by default -- correct for new projects, but we need to opt back in for backward compat. No breaking compile-time changes. |
+| `ModelContextProtocol.AspNetCore` | -- | 1.2.0 | **Add** | Required for HTTP transports. Provides `WithHttpTransport()` and `MapMcp()`. Depends on `ModelContextProtocol >= 1.2.0`. Targets .NET 8+ (compatible with .NET 10). |
 
-### Aspire Integration
+### How It Works
 
-| Package | Version | Purpose | Notes |
-|---------|---------|---------|-------|
-| Aspire.AppHost.Sdk | 13.1.3+ | AppHost SDK for orchestration | Referenced as SDK in AppHost `.csproj`. |
-| Aspire.Hosting.Qdrant | 13.1.0+ | Qdrant container hosting | Provides `AddQdrant()` in AppHost. Runs `qdrant/qdrant` container. |
-| Aspire.Qdrant.Client | 13.1.2+ | DI-registered QdrantClient | Registers `QdrantClient` in service DI from Aspire service discovery. |
-| Aspire.Hosting.Testing | 13.2.0 | Integration test infrastructure | `DistributedApplicationTestingBuilder` for spinning up AppHost in tests. |
+`ModelContextProtocol.AspNetCore` 1.2.0 provides a single `MapMcp()` call that registers both transport endpoints:
 
-### Supporting Libraries
+**Streamable HTTP (modern, MCP 2025-03-26 spec):**
+- `POST /` -- send messages, receive JSON or SSE stream response
+- `GET /` -- open long-lived SSE stream for unsolicited server messages
+- `DELETE /` -- terminate session
+- Stateful via `Mcp-Session-Id` header
 
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| YamlDotNet | 16.3.0 | YAML frontmatter parsing | Parsing skill file frontmatter (name, description, tags). Use `IDeserializer` with `Parser` to extract frontmatter block, then deserialize to strongly-typed model. |
-| System.CommandLine | 2.0.x | CLI argument parsing | For `--console`, `--setup`, `--names`, `--summaries` flags. Microsoft's official CLI parsing library. |
-| System.Text.Json | (built-in) | JSON serialization | Built into .NET 10. Use for `--console` JSON output and config file reading/writing. No external package needed. |
-| Microsoft.Extensions.Hosting | (built-in) | Host builder | Foundation for MCP server. `Host.CreateApplicationBuilder(args)` pattern. |
-| Microsoft.Extensions.Options | (built-in) | Configuration binding | Bind `appsettings.json` / env vars to strongly-typed options (Qdrant endpoint, embedding provider config, API key). |
+**Legacy SSE (backward compat, MCP 2024-11-05 spec):**
+- `GET /sse` -- open SSE connection
+- `POST /message` -- send messages
+- Must opt in: `EnableLegacySse = true` (defaults to `false` in v1.2.0, marked `[Obsolete]` but functional)
 
-### Development Tools
+### Setup Pattern
 
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| Docker Desktop | Qdrant container via Aspire | Aspire's `AddQdrant()` runs the container automatically. |
-| .NET 10 SDK | Build, test, pack | Install from dotnet.microsoft.com. Includes `dnx` tool runner. |
-| Aspire workload | Aspire AppHost support | `dotnet workload install aspire` after SDK install. |
+```csharp
+// DI registration
+builder.Services.AddMcpServer()
+    .WithHttpTransport(options =>
+    {
+        options.EnableLegacySse = true;  // Claude Desktop and older clients use SSE
+        // options.IdleTimeout = TimeSpan.FromHours(2);  // default
+        // options.Stateless = false;  // default, use stateful sessions
+    })
+    .WithToolsFromAssembly();
 
-## Installation
-
-```bash
-# .NET 10 SDK (prerequisite)
-# Download from https://dotnet.microsoft.com/download/dotnet/10.0
-
-# Aspire workload
-dotnet workload install aspire
-
-# Core project packages
-dotnet add package ModelContextProtocol --version 1.1.0
-dotnet add package Qdrant.Client --version 1.17.0
-dotnet add package Microsoft.Extensions.AI --version 10.4.0
-dotnet add package YamlDotNet --version 16.3.0
-
-# Embedding providers (user picks one or more)
-dotnet add package Microsoft.Extensions.AI.OpenAI --version 10.4.1
-dotnet add package OllamaSharp --version 5.4.16
-
-# AppHost project
-dotnet add package Aspire.Hosting.Qdrant --version 13.1.0
-
-# Service project (Aspire client integration)
-dotnet add package Aspire.Qdrant.Client --version 13.1.2
-
-# Test project
-dotnet add package xunit.v3 --version 3.2.2
-dotnet add package Aspire.Hosting.Testing --version 13.2.0
+// Endpoint routing
+app.MapMcp();
 ```
 
-## NuGet Tool Packaging
+### Critical: ASP.NET Core Shared Framework
 
-The project distributes as a .NET tool via NuGet, invokable with `dnx QdrantSkillsMCP`.
+The Infrastructure project uses `Microsoft.NET.Sdk` (not `.Web`) and ships as a NuGet tool (`PackAsTool`). To use `ModelContextProtocol.AspNetCore` without changing to `Sdk.Web`:
 
 ```xml
-<!-- In the main project .csproj -->
-<PropertyGroup>
-  <PackAsTool>true</PackAsTool>
-  <ToolCommandName>QdrantSkillsMCP</ToolCommandName>
-  <PackageOutputPath>./nupkg</PackageOutputPath>
-  <PackageId>QdrantSkillsMCP</PackageId>
-</PropertyGroup>
+<FrameworkReference Include="Microsoft.AspNetCore.App" />
 ```
 
-**dnx (new in .NET 10):** Downloads and runs a tool package without explicit install. Users run `dnx QdrantSkillsMCP` and it just works. Falls back to `dotnet tool install -g QdrantSkillsMCP` for pre-.NET 10 users.
+This brings in ASP.NET Core types (Kestrel, routing, etc.) without changing the project SDK. The tool packaging (`PackAsTool`) is preserved. At startup, select the hosting model based on CLI flags:
 
-## Alternatives Considered
+- `--stdio` (default): Use `Host.CreateDefaultBuilder()` + `WithStdioServerTransport()` (existing code)
+- `--sse` or `--streamable-http` or `--url {url}`: Use `WebApplication.CreateBuilder()` + `WithHttpTransport()` + `MapMcp()`
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| ModelContextProtocol (official) | ModelContextProtocol.NET (community) | Never — the community package (0.3.x alpha) predates the official SDK and is not maintained by the MCP spec authors. |
-| Qdrant.Client (official gRPC) | Aerx.QdrantClient.Http | Never for this project — HTTP client lacks gRPC performance and the Aspire integration registers `QdrantClient` specifically. |
-| Microsoft.Extensions.AI | Semantic Kernel embeddings | If the project later needs SK's full agent/planner capabilities. For just embeddings, M.E.AI is lighter and more composable. |
-| OllamaSharp | Microsoft.Extensions.AI.Ollama | Never — Microsoft deprecated their Ollama package in favor of OllamaSharp. |
-| YamlDotNet | Markdig.Extensions.Yaml | If you need full Markdown AST parsing too. YamlDotNet alone is simpler when you only need frontmatter extraction. |
-| xUnit v3 | NUnit 4 / MSTest 3 | Personal preference only. xUnit v3 has the best MTP integration and is the .NET community standard. |
-| Aspire 13.x | Docker Compose | If Aspire is overkill. But Aspire provides service discovery, health checks, and test infrastructure — worth it for this project. |
-| System.CommandLine | Spectre.Console.Cli | If you want richer CLI UX (tables, colors). System.CommandLine is sufficient for the flags described in requirements. |
+### Breaking Change Alert
 
-## What NOT to Use
+**ModelContextProtocol 1.1.0 -> 1.2.0**: `EnableLegacySse` defaults to `false`. If Claude Desktop or other SSE-only clients connect to the HTTP endpoint, they will get 404 on `/sse` unless `EnableLegacySse = true` is set. This is a behavioral change, not a compile-time break.
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| Aspire 9.2 packages | Outdated. Aspire jumped to v13 in Nov 2025. The 9.x line is end-of-support. | Aspire 13.x packages |
-| Microsoft.Extensions.AI.Ollama | Officially deprecated by Microsoft. No future updates. | OllamaSharp 5.x |
-| ModelContextProtocol.NET.Core / .Server | Community alpha packages (0.3.x). Not the official SDK. Will confuse NuGet resolution. | ModelContextProtocol 1.1.0 (official) |
-| ModelContextProtocol.AspNetCore | For HTTP/SSE transport MCP servers. This project uses stdio transport. | ModelContextProtocol (main package) |
-| Pinecone / Weaviate / Milvus clients | Wrong vector DB. Project requires Qdrant. | Qdrant.Client |
-| xUnit v2 | Legacy. Does not support MTP runner. v3 is stable and GA. | xunit.v3 3.2.2 |
-| Microsoft.SemanticKernel (for embeddings only) | Heavyweight dependency (pulls in planners, agents, memory). Overkill when only `IEmbeddingGenerator` is needed. | Microsoft.Extensions.AI |
+### Key Transport Options (HttpServerTransportOptions)
 
-## Stack Patterns by Variant
+| Property | Default | Use Case |
+|----------|---------|----------|
+| `EnableLegacySse` | `false` | Set `true` for backward compat with SSE-only clients |
+| `Stateless` | `false` | Keep `false` -- stateful sessions match MCP session model |
+| `IdleTimeout` | 2 hours | Reasonable default, no change needed |
+| `MaxIdleSessionCount` | 10,000 | Reasonable for shared server, no change needed |
+| `EventStreamStore` | null (in-memory) | Only set for multi-instance resumability. Skip for v1.1. |
 
-**If user wants fully local (no cloud API calls):**
-- Use OllamaSharp + local Ollama with `all-minilm` or `nomic-embed-text` model
-- Or SmartComponents.LocalEmbeddings for in-process ONNX
-- Qdrant runs locally via Aspire container
-- Zero network dependencies beyond NuGet restore
+---
 
-**If user wants cloud embeddings (OpenAI/Azure):**
-- Use Microsoft.Extensions.AI.OpenAI with `text-embedding-3-small`
-- Configure via `appsettings.json` or environment variables
-- Same `IEmbeddingGenerator` interface — no code changes
+## Auth / Identity
 
-**If user wants both (configurable at runtime):**
-- Register embedding provider via DI based on config
-- Factory pattern: read `EmbeddingProvider` from config, resolve appropriate `IEmbeddingGenerator` implementation
-- This is the recommended default architecture
+### Packages to Add
 
-## Version Compatibility
+| Package | Version | Purpose | Why This One |
+|---------|---------|---------|-------------|
+| `Microsoft.Identity.Web` | 4.6.0 | JWT validation + Entra integration | Official Microsoft package. Single call: `AddMicrosoftIdentityWebApi()`. Handles JWKS rotation, issuer validation, audience checks, multi-tenant support. Published 2026-03-20. |
 
-| Package | Compatible With | Notes |
-|---------|-----------------|-------|
-| ModelContextProtocol 1.1.0 | .NET 8+ | Works on .NET 10. Uses Microsoft.Extensions.Hosting. |
-| Qdrant.Client 1.17.0 | .NET 6+ / netstandard2.0 | Broad compatibility. Depends on Grpc.Net.Client >= 2.71.0. |
-| Aspire 13.x packages | .NET 8, 9, 10 | Aspire 13 explicitly supports all three. |
-| xunit.v3 3.2.2 | .NET 8+ | MTP v1 by default, v2 opt-in available. |
-| Microsoft.Extensions.AI 10.4.x | .NET 9+ | Check minimum TFM — may require net9.0 or net10.0. |
-| YamlDotNet 16.3.0 | .NET 6+ / netstandard2.0 | Broad compatibility. Supports AOT via source generator. |
-| OllamaSharp 5.4.16 | .NET 8+ | Implements M.E.AI interfaces natively. |
+`Microsoft.AspNetCore.Authentication.JwtBearer` (10.0.5) is included in the ASP.NET Core shared framework -- no explicit package reference needed when using `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 
-## Key Architecture Decision: Aspire Version
+### What NOT to Add for Auth
 
-The PROJECT.md states "Aspire v9.2" as a constraint. This is **outdated and must be updated**:
+| Package | Why NOT |
+|---------|---------|
+| `Microsoft.Identity.Client` (MSAL.NET 4.83.1) | Client-side token acquisition. The MCP server is the resource server -- it validates tokens, does not acquire them. |
+| `Azure.Identity` | For calling Azure APIs (Key Vault, Storage, etc.). Not needed for JWT validation. Add later only if the server itself calls Azure services. |
+| `Duende.IdentityServer` or any custom OAuth server | Entra IS the authorization server. Do not build or host your own. |
+| `Microsoft.AspNetCore.Authentication.OpenIdConnect` | For interactive web app login (cookie-based). MCP server uses JWT bearer auth only. |
 
-- Aspire 9.2 was released mid-2025
-- In November 2025, Aspire jumped to **v13** (intentionally skipping 10-12 to decouple from .NET versioning)
-- Aspire 9.x is now **out of support**
-- Aspire 13.x is the current stable line, with 13.2.0 as latest
-- All Qdrant integration packages (Hosting, Client) are versioned at 13.x
-- The Aspire.Hosting.Testing package for xUnit integration tests is at 13.2.0
+### JWT Validation Setup
 
-**Recommendation:** Update the project constraint from "Aspire v9.2" to "Aspire 13.x (latest stable)".
+```csharp
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+
+// appsettings.json
+{
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "{tenant-id}",
+    "ClientId": "api://{client-id}",
+    "Audience": "api://{client-id}"
+  }
+}
+```
+
+### MCP OAuth 2.0 Protocol Compliance
+
+The MCP 2025-03-26 spec requires two well-known endpoints:
+
+1. **Protected Resource Metadata** (RFC 9728): Server MUST serve `/.well-known/oauth-protected-resource`:
+   ```json
+   {
+     "resource": "https://your-server-url",
+     "authorization_servers": ["https://login.microsoftonline.com/{tenantId}/v2.0"],
+     "scopes_supported": ["skills.read", "skills.write"]
+   }
+   ```
+
+2. **Authorization Server Metadata** (RFC 8414): Entra already publishes this at `https://login.microsoftonline.com/{tenantId}/v2.0/.well-known/openid-configuration`. No server-side work needed.
+
+The server needs a simple middleware or endpoint to serve the protected resource metadata document. This is a static JSON response -- no package needed.
+
+### Scopes Design
+
+| Scope | Entra Value | Grants |
+|-------|------------|--------|
+| `skills.read` | `api://{client-id}/skills.read` | `search-skills`, `load-skill` |
+| `skills.write` | `api://{client-id}/skills.write` | `add-skill`, `update-skill`, `archive-skill`, `delete-skill` |
+
+Implement via `[RequiredScope("skills.read")]` attribute or policy-based authorization checking `scp` or `roles` claims.
+
+### az CLI Token Reuse (Developer Convenience)
+
+For developers who have run `az login`:
+
+```bash
+# Get a token for the MCP server's Entra app
+az account get-access-token --resource api://{client-id} --query accessToken -o tsv
+```
+
+This produces a standard Entra JWT. The MCP client (or a wrapper script) passes it as `Authorization: Bearer {token}`. The server validates it identically to any other Entra-issued token. **No special server-side code needed** -- this is purely a client-side convenience pattern.
+
+---
+
+## IaC (Bicep)
+
+### Resource Types
+
+| Resource | Bicep Type | API Version | Purpose |
+|----------|-----------|-------------|---------|
+| Entra App Registration | `Microsoft.Graph/applications@v1.0` | v1.0 (Graph Bicep) | App reg with OAuth2 permission scopes |
+| Entra Service Principal | `Microsoft.Graph/servicePrincipals@v1.0` | v1.0 (Graph Bicep) | Enterprise app for the registration |
+| Log Analytics Workspace | `Microsoft.OperationalInsights/workspaces@2023-09-01` | 2023-09-01 | Required by Container Apps Environment |
+| Container Registry | `Microsoft.ContainerRegistry/registries@2023-07-01` | 2023-07-01 | ACR for Docker images |
+| Container Apps Environment | `Microsoft.App/managedEnvironments@2024-03-01` | 2024-03-01 | Hosting environment |
+| Container App | `Microsoft.App/containerApps@2024-03-01` | 2024-03-01 | QdrantSkillsMCP server instance |
+| App Service Plan | `Microsoft.Web/serverfarms@2023-12-01` | 2023-12-01 | Alternative hosting |
+| App Service | `Microsoft.Web/sites@2023-12-01` | 2023-12-01 | Alternative hosting |
+
+### Bicep Graph Extension (Entra App Registration)
+
+The Microsoft Graph Bicep extension went GA July 2025. Required for declarative Entra app registrations.
+
+```bicep
+extension microsoftGraph
+
+resource app 'Microsoft.Graph/applications@v1.0' = {
+  displayName: 'Q-Hub MCPs'
+  uniqueName: 'q-hub-mcps'
+  api: {
+    oauth2PermissionScopes: [
+      {
+        id: guid('q-hub-mcps-skills-read')
+        value: 'skills.read'
+        adminConsentDisplayName: 'Read skills'
+        adminConsentDescription: 'Search and load skills'
+        type: 'User'
+        isEnabled: true
+      }
+      {
+        id: guid('q-hub-mcps-skills-write')
+        value: 'skills.write'
+        adminConsentDisplayName: 'Write skills'
+        adminConsentDescription: 'Add, update, archive, and delete skills'
+        type: 'Admin'
+        isEnabled: true
+      }
+    ]
+  }
+}
+
+resource sp 'Microsoft.Graph/servicePrincipals@v1.0' = {
+  appId: app.appId
+}
+```
+
+**Confidence note:** MEDIUM for Graph Bicep. It is GA but newer than the Azure resource types. Group assignment (`appRoleAssignments` for qhub-people-dev/devops/qa/ba) may require additional `Microsoft.Graph/appRoleAssignedTo` resources or post-deployment scripts. Test this early.
+
+### Recommended File Structure
+
+```
+infra/
+  main.bicep              # Orchestrator module
+  main.bicepparam         # Environment parameters
+  modules/
+    entra-app.bicep       # App registration + service principal + scopes
+    container-registry.bicep  # ACR
+    container-apps.bicep  # Environment + container app
+    app-service.bicep     # Alternative deployment target
+    monitoring.bicep      # Log Analytics workspace
+```
+
+### Container App Configuration
+
+Key settings for the Container App resource:
+
+```bicep
+resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
+  properties: {
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 8080
+        transport: 'http'  // Container Apps handles TLS termination
+      }
+      registries: [{ server: acr.properties.loginServer, identity: managedIdentity.id }]
+    }
+    template: {
+      containers: [{
+        name: 'qdrant-skills-mcp'
+        image: '${acr.properties.loginServer}/qdrant-skills-mcp:latest'
+        resources: { cpu: json('0.5'), memory: '1Gi' }
+        env: [
+          { name: 'ASPNETCORE_URLS', value: 'http://+:8080' }
+          { name: 'MCP_TRANSPORT', value: 'streamable-http' }
+        ]
+      }]
+      scale: { minReplicas: 1, maxReplicas: 3 }
+    }
+  }
+}
+```
+
+---
+
+## CI/CD (GitHub Actions)
+
+### Actions to Use
+
+| Action | Version | Purpose |
+|--------|---------|---------|
+| `actions/checkout@v4` | v4 | Clone repository |
+| `actions/setup-dotnet@v4` | v4 | Install .NET 10 SDK |
+| `docker/login-action@v3` | v3 | Authenticate to ACR |
+| `docker/build-push-action@v6` | v6 | Build and push Docker image |
+| `azure/login@v2` | v2 | Authenticate to Azure via OIDC |
+| `azure/container-apps-deploy-action@v1` | v1 | Deploy revision to Container Apps |
+
+### Authentication: OIDC Federated Credentials (NOT Secrets)
+
+Do NOT use service principal client secrets stored as GitHub Secrets. Use OIDC federation:
+
+1. Create a User-Assigned Managed Identity in Azure
+2. Add federated credential pointing to `repo:jamesburton/QdrantSkillsMCP:ref:refs/heads/main` (and tag pattern)
+3. `azure/login@v2` authenticates with `client-id`, `tenant-id`, `subscription-id` -- no secret rotation
+
+```yaml
+- uses: azure/login@v2
+  with:
+    client-id: ${{ secrets.AZURE_CLIENT_ID }}
+    tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+    subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+```
+
+### Recommended Workflow Structure
+
+```
+.github/workflows/
+  ci.yml        # Build + test on every PR and push to main
+  deploy.yml    # Build image + push to ACR + deploy to Container Apps
+```
+
+**ci.yml** triggers: `push` to `main`, `pull_request` to `main`
+
+```yaml
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore
+      - run: dotnet build --no-restore
+      - run: dotnet test --no-build --logger trx
+```
+
+**deploy.yml** triggers: `push` tags `v*`, or `workflow_dispatch`
+
+```yaml
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_CLIENT_ID }}
+          password: ''  # OIDC token from azure/login
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ vars.ACR_LOGIN_SERVER }}/qdrant-skills-mcp:${{ github.ref_name }}
+      - uses: azure/container-apps-deploy-action@v1
+        with:
+          containerAppName: qdrant-skills-mcp
+          resourceGroup: ${{ vars.RESOURCE_GROUP }}
+          imageToDeploy: ${{ vars.ACR_LOGIN_SERVER }}/qdrant-skills-mcp:${{ github.ref_name }}
+```
+
+### Integration Tests in CI
+
+The existing XUnit v3 + Aspire integration tests require a running Qdrant instance. Options for CI:
+
+1. **Aspire test infrastructure** -- `DistributedApplicationTestingBuilder` starts containers. Requires Docker-in-Docker or a service container on the runner. This already works locally.
+2. **Skip integration tests in CI** initially, run only unit tests. Add integration test job later with Docker support.
+
+Recommend option 2 for v1.1 -- focus on the deploy pipeline first.
+
+---
+
+## What NOT to Add
+
+| Package / Tool | Why NOT |
+|---------------|---------|
+| `Azure.Identity` | Server validates incoming tokens, does not acquire tokens to call Azure APIs. Add only if the server later needs to call Key Vault, Storage, etc. |
+| `Microsoft.Identity.Client` (MSAL.NET) | Client-side token acquisition library. The server is the resource, not the client. |
+| `Duende.IdentityServer` | Entra IS the authorization server. Do not build or host a custom OAuth server. |
+| `Microsoft.AspNetCore.Authentication.OpenIdConnect` | For interactive web app login with cookies. MCP uses JWT bearer only. |
+| `Yarp.ReverseProxy` | Container Apps has built-in ingress with TLS termination, custom domains, and traffic splitting. No reverse proxy needed. |
+| `Swashbuckle` / `NSwag` (OpenAPI) | MCP endpoints are not REST APIs. OpenAPI docs would be misleading and incorrect. |
+| `DistributedCacheEventStreamStore` | Only needed for multi-instance Streamable HTTP resumability. Start with in-memory (default). Add when scaling beyond 1 replica. |
+| `Dapr` | Unnecessary abstraction. Direct Qdrant.Client + ASP.NET Core middleware is sufficient. |
+| `Terraform` | Bicep is native Azure IaC. No benefit from adding a Terraform provider for a pure-Azure deployment. |
+| `Azure DevOps Pipelines` | GitHub Actions is the CI/CD platform. No second system. |
+| Separate `ModelContextProtocol.Core` package reference | Already pulled in transitively by `ModelContextProtocol`. Do not add a direct reference. |
+
+---
+
+## Version Compatibility Matrix
+
+| Component | Version | Compatible With | Notes |
+|-----------|---------|-----------------|-------|
+| `ModelContextProtocol` | 1.2.0 | .NET 8+ | Upgrade from 1.1.0. No compile-time breaks. |
+| `ModelContextProtocol.AspNetCore` | 1.2.0 | .NET 8+ | New. Requires ASP.NET Core shared framework. |
+| `Microsoft.Identity.Web` | 4.6.0 | .NET 8+ | Latest stable. |
+| Bicep CLI | 0.30+ | Azure CLI 2.65+ | Ships with `az bicep`. Graph extension requires Bicep v0.26+. |
+| `actions/checkout` | v4 | ubuntu-latest | Standard. |
+| `actions/setup-dotnet` | v4 | .NET 10.0.x | Supports .NET 10. |
+| `azure/login` | v2 | OIDC federation | Supports federated credentials. |
+| `azure/container-apps-deploy-action` | v1 | Container Apps 2024-03-01+ | Supports `imageToDeploy`. |
+
+---
+
+## Summary of Changes to Infrastructure.csproj
+
+```xml
+<!-- Upgrade -->
+<PackageReference Include="ModelContextProtocol" Version="1.2.0" />
+
+<!-- Add -->
+<PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.2.0" />
+<PackageReference Include="Microsoft.Identity.Web" Version="4.6.0" />
+
+<!-- Add framework reference for ASP.NET Core (preserves PackAsTool) -->
+<FrameworkReference Include="Microsoft.AspNetCore.App" />
+```
+
+That is the complete set of NuGet changes. Three lines.
+
+---
 
 ## Sources
 
-- [NuGet: ModelContextProtocol 1.1.0](https://www.nuget.org/packages/ModelContextProtocol/) -- version and download count verified
-- [GitHub: modelcontextprotocol/csharp-sdk](https://github.com/modelcontextprotocol/csharp-sdk) -- official SDK repo
-- [Microsoft .NET Blog: Build MCP server in C#](https://devblogs.microsoft.com/dotnet/build-a-model-context-protocol-mcp-server-in-csharp/) -- WithTools/WithStdio pattern
-- [NuGet: Qdrant.Client 1.17.0](https://www.nuget.org/packages/Qdrant.Client) -- version verified
-- [Aspire Qdrant integration docs](https://learn.microsoft.com/en-us/dotnet/aspire/database/qdrant-component) -- hosting + client setup
-- [NuGet: Aspire.Hosting.Qdrant 13.1.0](https://www.nuget.org/packages/Aspire.Hosting.Qdrant) -- version verified
-- [NuGet: Aspire.Qdrant.Client 13.1.2](https://www.nuget.org/packages/Aspire.Qdrant.Client) -- version verified
-- [NuGet: Aspire.Hosting.Testing 13.2.0](https://www.nuget.org/packages/aspire.hosting.testing) -- version verified
-- [NuGet: Aspire.AppHost.Sdk 13.1.3](https://www.nuget.org/packages/Aspire.AppHost.Sdk) -- version verified
-- [Microsoft .NET Blog: AI and Vector Data Extensions GA](https://devblogs.microsoft.com/dotnet/ai-vector-data-dotnet-extensions-ga/) -- M.E.AI GA announcement
-- [NuGet: Microsoft.Extensions.AI 10.4.0](https://www.nuget.org/packages/Microsoft.Extensions.AI/) -- version verified
-- [NuGet: Microsoft.Extensions.AI.OpenAI 10.4.1](https://www.nuget.org/packages/Microsoft.Extensions.AI.OpenAI/) -- version verified
-- [NuGet: OllamaSharp 5.4.16](https://www.nuget.org/packages/OllamaSharp) -- version verified, implements IEmbeddingGenerator
-- [NuGet: xunit.v3 3.2.2](https://www.nuget.org/packages/xunit.v3) -- version verified
-- [xUnit v3 MTP docs](https://xunit.net/docs/getting-started/v3/microsoft-testing-platform) -- MTP setup
-- [NuGet: YamlDotNet 16.3.0](https://www.nuget.org/packages/YamlDotNet) -- version verified
-- [Microsoft: Aspire 13 announcement](https://devblogs.microsoft.com/dotnet/dotnet-aspire-92-is-now-available-with-new-ways-to-deploy/) -- versioning change rationale
-- [Visual Studio Magazine: Aspire 13 drops .NET branding](https://visualstudiomagazine.com/articles/2025/11/12/microsoft-releases-aspire-13.aspx) -- Aspire rebranding context
-- [Andrew Lock: dnx tool runner in .NET 10](https://andrewlock.net/exploring-dotnet-10-preview-features-5-running-one-off-dotnet-tools-with-dnx/) -- dnx packaging details
-- [.NET 10 download page](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) -- GA confirmed Nov 2025
+- [NuGet: ModelContextProtocol 1.2.0](https://www.nuget.org/packages/ModelContextProtocol/)
+- [NuGet: ModelContextProtocol.AspNetCore 1.2.0](https://www.nuget.org/packages/ModelContextProtocol.AspNetCore/)
+- [NuGet: Microsoft.Identity.Web 4.6.0](https://www.nuget.org/packages/Microsoft.Identity.Web)
+- [MCP C# SDK Releases](https://github.com/modelcontextprotocol/csharp-sdk/releases)
+- [MCP C# SDK: HttpServerTransportOptions](https://csharp.sdk.modelcontextprotocol.io/api/ModelContextProtocol.AspNetCore.HttpServerTransportOptions.html)
+- [MCP C# SDK: Streamable HTTP Protocol (DeepWiki)](https://deepwiki.com/modelcontextprotocol/csharp-sdk/5.4-streamable-http-protocol)
+- [MCP Specification: Authorization](https://modelcontextprotocol.io/specification/draft/basic/authorization)
+- [MCP Specification: Transports (2025-03-26)](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports)
+- [Microsoft Learn: JWT bearer authentication in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/configure-jwt-bearer-authentication)
+- [Microsoft Learn: Protected web API app configuration](https://learn.microsoft.com/en-us/entra/identity-platform/scenario-protected-web-api-app-configuration)
+- [Microsoft Learn: Microsoft.App/containerApps Bicep reference](https://learn.microsoft.com/en-us/azure/templates/microsoft.app/containerapps)
+- [Microsoft Learn: Microsoft.App/managedEnvironments Bicep reference](https://learn.microsoft.com/en-us/azure/templates/microsoft.app/managedenvironments)
+- [Microsoft Learn: Microsoft.Graph/applications Bicep reference](https://learn.microsoft.com/en-us/graph/templates/bicep/reference/applications)
+- [Microsoft Learn: Deploy to Container Apps with GitHub Actions](https://learn.microsoft.com/en-us/azure/container-apps/github-actions)
+- [GitHub: Azure/container-apps-deploy-action](https://github.com/Azure/container-apps-deploy-action)
+- [Bicep for Entra ID resources GA announcement](https://devblogs.microsoft.com/identity/bicep-templates-for-microsoft-entra-id-resources-is-ga/)
+- [Building Remote MCP Servers with .NET and Azure Container Apps](https://dev.to/willvelida/building-remote-mcp-servers-with-net-and-azure-container-apps-cc2)
+- [MCP Auth Specification Deep Dive](https://www.descope.com/blog/post/mcp-auth-spec)
 
 ---
-*Stack research for: .NET MCP Server with Qdrant Vector Storage*
-*Researched: 2026-03-25*
+*Stack research for: v1.1 Shared Server milestone*
+*Researched: 2026-03-31*

@@ -1,219 +1,271 @@
 # Project Research Summary
 
-**Project:** QdrantSkillsMCP
-**Domain:** .NET MCP Server with Qdrant Vector Storage for Skill Management
-**Researched:** 2026-03-25
-**Confidence:** HIGH
+**Project:** QdrantSkillsMCP v1.1 — Shared Server Milestone
+**Domain:** .NET 10 MCP server — HTTP transports, MCP OAuth 2.0, Azure IaC, GitHub Actions CI/CD
+**Researched:** 2026-03-31
+**Confidence:** HIGH (all four research files rated HIGH overall; two MEDIUM areas noted below)
 
 ## Executive Summary
 
-QdrantSkillsMCP is a .NET 10 MCP server that gives AI agents semantic search and full CRUD lifecycle management over a library of markdown-based skills stored in Qdrant. The product occupies a unique niche: no existing tool combines vector search, full write operations, session intelligence, and multi-agent auto-configuration in a single server. The nearest competitors (Qdrant Official MCP, K-Dense claude-skills-mcp, skill-mcp) are either read-only, single-provider, or lack session tracking entirely. The recommended build approach is a clean layered .NET solution — Core (domain contracts), Infrastructure (Qdrant + embedding providers), executable (MCP tools + CLI) — orchestrated locally with Aspire 13.x, packaged as a `dnx`-installable NuGet tool.
+QdrantSkillsMCP v1.1 converts the existing stdio-only MCP tool server into a shared, multi-tenant HTTP server deployable to Azure Container Apps. The recommended approach is a strict four-phase build — HTTP transport first (foundation), Entra authentication second (depends on HTTP), Bicep IaC third (depends on auth config shape), Docker and CI/CD last (depends on everything) — because each phase is a hard prerequisite for the next with no safe parallelism. The .NET MCP C# SDK v1.2.0 provides Streamable HTTP and legacy SSE endpoints through a single `MapMcp()` call, keeping the implementation surface small. The entire HTTP feature set is a conditional branch in `Program.cs`; the existing stdio path stays untouched.
 
-The stack is well-understood and all dependencies are GA and production-grade. The official ModelContextProtocol C# SDK (v1.1.0) provides the stdio transport and DI-friendly tool registration pattern. Qdrant's official .NET client (v1.17.0) handles gRPC persistence. Microsoft.Extensions.AI (v10.4.x) provides the embedding abstraction that makes provider-swapping transparent. The architecture follows well-established .NET patterns: strategy pattern for pluggable embeddings, constructor-injected MCP tool classes, dual-mode entry point (stdio vs console), and Qdrant as both the vector index and document store.
+The MCP OAuth 2.0 story is clean once the architecture is correct: the MCP server is a **resource server only**, Azure Entra is the authorization server. Three packages add the complete auth capability — `ModelContextProtocol.AspNetCore` 1.2.0, `Microsoft.Identity.Web` 4.6.0, and a `<FrameworkReference>` for `Microsoft.AspNetCore.App`. Do not implement token issuance, PKCE, or consent flows — Entra handles all of that. The one non-trivial auth requirement is serving `/.well-known/oauth-protected-resource` (RFC 9728 Protected Resource Metadata), a static JSON endpoint that is REQUIRED by the MCP November 2025 spec for client auto-discovery.
 
-The three non-negotiable risks are: (1) stdout pollution silently breaking the MCP stdio transport — logging must be stderr-only from line one; (2) embedding dimension mismatch corrupting the Qdrant collection when users switch providers — requires startup validation and a `--reindex` migration path; (3) lossy YAML frontmatter transformation violating the round-trip fidelity constraint — solved by storing raw content verbatim in the Qdrant payload alongside parsed fields. All three must be designed into Phase 1 before any feature work begins.
+The highest-risk areas are the Bicep Graph extension for Entra app registration (GA July 2025 but newer, with documented limitations around secrets and group assignments that require post-deploy scripts) and the `PackAsTool` + `FrameworkReference` interaction (needs early validation via `dotnet pack`). Both risks are addressable with known mitigations. Everything else follows well-documented patterns with high-confidence official sources.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack is mature, fully GA, and purpose-built for this use case. .NET 10 (LTS, GA November 2025) is the correct runtime — it enables the `dnx` tool runner for one-command installation, C# 14 features, and Aspire 13.x compatibility. The project's original "Aspire v9.2" constraint is outdated: Aspire jumped to v13 in November 2025, and the 9.x line is end-of-support. All Aspire packages must be pinned to 13.x.
+The v1.0 stack is unchanged. Three additions land in `Infrastructure.csproj`:
 
-**Core technologies:**
-- **.NET 10 (LTS):** Runtime and SDK — GA, 3-year support window, enables dnx and Aspire 13.x
-- **ModelContextProtocol 1.1.0:** Official C# MCP SDK (Microsoft + Anthropic, 5.2M downloads) — provides `AddMcpServer()`, `WithStdioServerTransport()`, `WithToolsFromAssembly()`
-- **Qdrant.Client 1.17.0:** Official gRPC client — required by Aspire integration, broadest .NET compatibility
-- **Aspire 13.x:** Local dev orchestration — first-party Qdrant hosting, `DistributedApplicationTestingBuilder` for integration tests, zero manual Docker setup
-- **Microsoft.Extensions.AI 10.4.x:** GA embedding abstraction — `IEmbeddingGenerator<string, Embedding<float>>` enables clean provider swap with no core logic changes
-- **OllamaSharp 5.4.16:** Local Ollama embeddings — Microsoft deprecated their own Ollama package in favor of this
-- **YamlDotNet 16.3.0:** YAML frontmatter parsing — only library needed when full Markdown AST is not required
-- **xUnit v3 3.2.2:** Test framework — best Microsoft Testing Platform integration, community standard
+```xml
+<FrameworkReference Include="Microsoft.AspNetCore.App" />
+<PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.2.0" />
+<PackageReference Include="Microsoft.Identity.Web" Version="4.6.0" />
+```
 
-**Critical version warnings:**
-- Do NOT use Aspire 9.2 packages — end of support, replaced by Aspire 13.x
-- Do NOT use `Microsoft.Extensions.AI.Ollama` — officially deprecated, replaced by OllamaSharp
-- Do NOT use `ModelContextProtocol.AspNetCore` — that is for HTTP/SSE transport; this project uses stdio
+`ModelContextProtocol` also upgrades from 1.1.0 to 1.2.0 (required by `ModelContextProtocol.AspNetCore`). The upgrade has no compile-time breaks but changes the default for `EnableLegacySse` from `true` to `false` — explicitly set `EnableLegacySse = true` to keep backward compat with SSE-only clients such as Claude Desktop.
+
+**Core new technologies:**
+- `ModelContextProtocol.AspNetCore` 1.2.0 — HTTP transport; `MapMcp()` registers Streamable HTTP + legacy SSE automatically; no manual endpoint wiring needed
+- `Microsoft.Identity.Web` 4.6.0 — Entra JWT validation via single `AddMicrosoftIdentityWebApi()` call; handles JWKS rotation, issuer validation, audience checks, and scope claims
+- Bicep + Graph extension (GA July 2025) — declarative Entra app registration via `Microsoft.Graph/applications@v1.0`; supports OAuth2 permission scopes
+- GitHub Actions OIDC federation — `azure/login@v2` with federated credentials eliminates client secret rotation entirely
+- `azure/container-apps-deploy-action@v1` — deploys new revision to ACA by image reference
+
+**What NOT to add:** `Azure.Identity`, MSAL.NET, `Duende.IdentityServer`, OIDC middleware, `Swashbuckle`, YARP, Dapr, Terraform, `DistributedCacheEventStreamStore` (v1.1 is single-instance). See STACK.md for full rationale on each.
 
 ### Expected Features
 
-The competitive landscape is clear. No existing tool combines full CRUD, semantic search, session tracking, and multi-agent setup in one package. QdrantSkillsMCP's differentiation is strongest in session intelligence and the multi-agent `--setup` wizard.
-
 **Must have (table stakes):**
-- Semantic skill search — core value proposition, every competitor has this
-- Full CRUD (add/update/delete/list) — K-Dense and skill-mcp are read-only, a critical gap to fill
-- Skill retrieval by name (`load-skill`) — direct lookup for known skills
-- Configurable embedding provider — offline, cost, and latency constraints vary by user
-- stdio MCP transport — required by MCP spec for local server integration
-- YAML frontmatter round-trip preservation — non-negotiable per project constraints
-- Qdrant connection configuration — URL, API key, collection name
+- Streamable HTTP transport with `POST /`, `GET /`, `DELETE /` endpoints via `MapMcp()`
+- `EnableLegacySse = true` for backward compat (`GET /sse`, `POST /message`)
+- `--sse` / `--streamable-http` / `--url {URL}` CLI flags (all three map to the same `WithHttpTransport()` code path)
+- JWT Bearer validation on every HTTP request — 401 for missing or invalid token
+- Audience (`aud`) validation against `api://{client-id}` — CRITICAL security requirement
+- Scope enforcement: `skills:read` for read tools, `skills:write` for write tools
+- Entra app registration with `skills:read` and `skills:write` OAuth2 scopes
+- App roles (`SkillReader`, `SkillWriter`) assigned from 4 Q-Hub groups — cleaner than raw group GUIDs in JWT
+- `/.well-known/oauth-protected-resource` endpoint (RFC 9728) — required by MCP November 2025 spec
+- `/health` endpoint for Container Apps liveness and readiness probes
+- Bicep: Container Apps environment + app + managed identity + ACR + Log Analytics workspace
+- Bicep: Entra app registration + service principal + scopes (Graph extension)
+- GitHub Actions: `ci.yml` (build + test), `deploy.yml` (build → ACR push → ACA deploy)
+- Dockerfile updated: `EXPOSE`, `--streamable-http` entrypoint, auth env var placeholders
 
-**Should have (competitive differentiators):**
-- Session tracking ("already loaded" awareness) — unique; prevents redundant context stuffing
-- Archive (soft-delete) — competitors have hard delete only
-- `--names` and `--summaries` output modes — progressive disclosure for large skill libraries
-- Bundled SKILL.md (self-teaching meta-skill) — reduces cold-start friction
-- `--console` mode (CLI + REPL) — enables non-MCP scripting and manual management
-- Additional local embedding providers (ONNX, Ollama) — supports offline use
+**Should have (differentiators):**
+- `groupMembershipClaims: "ApplicationGroup"` on resource app manifest — prevents group claim overage
+- `az account get-access-token --resource api://{client-id}` documented in setup wizard — developer convenience
+- Kestrel `KeepAliveTimeout` tuned to 2 hours — prevents SSE connection drops
+- CORS middleware in HTTP branch — future-proofs for browser-based MCP clients
+- Configurable port via `--url` / `ASPNETCORE_URLS` — avoids local port conflicts (default port must not be 5000/5001 or macOS AirPlay port)
+- Container Apps secrets (not plain env vars) for API keys and connection strings
+- Image tagged with Git SHA, not `latest` — reliable rollback
 
-**Phase 3 (ecosystem):**
-- `--setup` auto-configuration for 7+ agents (Claude, Copilot, Codex, OpenCode, Docker Agent, Kilocode, Factory Droid)
-- skills-guru integration (push/sync)
-- NuGet tool packaging with `dnx` distribution
-
-**Defer to v2+ / indefinitely:**
-- OAuth/OIDC authentication (API key is sufficient initially)
-- GUI/web dashboard, skill authoring UI, marketplace, knowledge graphs, hybrid BM25+vector search
+**Defer (v2+):**
+- Dynamic Client Registration (RFC 7591) — known clients; pre-register in Entra
+- Stateless horizontal scaling / Redis session store — single-instance ACA is sufficient for team use
+- SSE event ID resumability / `EventStreamStore` — not needed until multi-instance
+- Key Vault references for secrets — Container Apps inline secrets are acceptable for v1.1
+- Custom domain + managed TLS certificate — default `*.azurecontainerapps.io` is sufficient
+- Multi-tenant Entra support — explicitly out of scope per PROJECT.md
+- Blue/green via multiple-revision mode — over-engineering for current deployment frequency
+- App Service alternative Bicep module — include only if ACA has a specific blocker
 
 ### Architecture Approach
 
-The recommended architecture is a four-project .NET solution with clean layering: Core (zero-dependency domain contracts), Infrastructure (concrete implementations of all external dependencies), executable (MCP tools + CLI entry points), and AppHost (Aspire dev orchestration only, not shipped). This structure enables Core to be built first, establishing all interfaces before any infrastructure work begins, which in turn allows parallel development of embedding providers.
+The architecture is a **conditional branch in `Program.cs`**. The existing 4-way branch (`--config`, `--console`, `--setup`, default stdio) gains a fifth branch that fires on `--sse`, `--streamable-http`, or `--url`. The stdio branch and all other branches are untouched. The HTTP branch uses `WebApplication.CreateBuilder()` instead of `Host.CreateApplicationBuilder()`, calls `AddEntraAuthentication()` conditionally, adds `AddMcpServer().WithHttpTransport().WithToolsFromAssembly()`, and builds the pipeline as `UseAuthentication() → UseAuthorization() → MapMcp().RequireAuthorization()`. Auth registration is a new `Auth/AuthRegistration.cs` extension method called only in the HTTP branch — stdio mode has no auth pipeline.
 
-**Major components:**
-1. **MCP Tool Layer** — one class per tool (`[McpServerToolType]` + constructor injection), registered via `WithToolsFromAssembly()`
-2. **SkillService** — core business logic coordinating search, CRUD, session tracking, and embedding
-3. **ISkillRepository / QdrantSkillRepository** — Qdrant abstraction; stores full raw content in payload alongside structured fields
-4. **IEmbeddingProvider** — pluggable strategy (ONNX / OpenAI / Azure OpenAI / Ollama); selected via config at startup
-5. **SessionTracker** — in-memory per-connection tracking of returned skills; TTL-based expiry
-6. **SkillParser** — YAML frontmatter extraction preserving raw original content for lossless round-trips
-7. **Dual-mode entry point** — `--setup` wizard, `--console` CLI/REPL, or default stdio MCP transport
+**Major new components:**
+1. **HTTP transport branch in Program.cs** — `WebApplication.CreateBuilder` + `WithHttpTransport()` + `MapMcp()`; `--sse` and `--streamable-http` converge to the same code path
+2. **`Auth/AuthRegistration.cs`** — `AddEntraAuthentication()` extension; registers JWT bearer via `AddMicrosoftIdentityWebApi()`; defines `SkillsRead` and `SkillsWrite` authorization policies
+3. **`/.well-known/oauth-protected-resource` endpoint** — small static `MapGet` serving RFC 9728 JSON pointing to Entra as authorization server
+4. **`/health` endpoint** — `MapGet` or `MapHealthChecks`; checks Qdrant connectivity for readiness
+5. **`infra/` Bicep modules** — `main.bicep` orchestrator calling `entra-app.bicep`, `container-apps.bicep` (environment + app + managed identity), `monitoring.bicep`
+6. **`.github/workflows/ci.yml`** — build + test on every push/PR to main
+7. **`.github/workflows/deploy.yml`** — OIDC Azure login → ACR push (SHA tag) → ACA revision deploy on `v*` tags or manual dispatch
 
-**Key data flow:** Query → embed query → Qdrant vector search → session-aware filtering → JSON response. Ingestion: raw markdown → parse YAML → extract embeddable text → embed → upsert to Qdrant (raw content + structured payload fields).
+**Session tracking note:** `InMemorySessionTracker` already supports keyed sessions. HTTP mode must pass the MCP `Mcp-Session-Id` (provided by the SDK) to the session tracker rather than `null`/`__default__`. The tools currently use `sessionId: null`; this must be updated for multi-client HTTP correctness.
 
 ### Critical Pitfalls
 
-1. **stdout pollution breaks stdio transport** — Any `Console.WriteLine` or console-sink logger corrupts the MCP JSON-RPC stream. Configure stderr-only logging before writing any other code. Add an integration test asserting stdout contains only valid JSON-RPC.
+1. **stdout contamination breaks stdio** — `WebApplication.CreateBuilder()` starts Kestrel. If invoked in stdio mode, it writes to stdout and kills the MCP JSON-RPC stream. Fix: keep builder paths strictly mutually exclusive in `Program.cs`. Verify with a regression test after every change to the transport branch.
 
-2. **Embedding dimension mismatch corrupts the collection** — Switching providers (e.g., 384-dim ONNX to 1536-dim OpenAI) makes existing data unsearchable. Store model identifier and dimension in collection metadata; validate on startup; provide `--reindex` migration command.
+2. **Missing or wrong audience (`aud`) validation** — Without configuring "Expose an API" in Entra and setting an Application ID URI, Entra issues tokens with Graph's audience (`00000003-...`). JWT middleware rejects all tokens. Fix: configure `api://{client-id}` Application ID URI and custom scopes before writing any auth code.
 
-3. **Lossy YAML transformation violates round-trip fidelity** — Parsing frontmatter into structured fields and reconstructing on read drops comments, reorders keys, alters whitespace. Store the complete original markdown as `raw_content` in the Qdrant payload and return that verbatim.
+3. **Group claims on the wrong app registration** — `groupMembershipClaims` must be set on the **resource** (server) app registration, not the client app. Access tokens are shaped by the resource manifest, not the client manifest. Fix: set `groupMembershipClaims: "ApplicationGroup"` on the server app reg; assign the 4 Q-Hub groups via Enterprise Applications.
 
-4. **Leaky embedding abstraction** — A naive `EmbedAsync(string)` interface fails to handle batching, rate limits, and token limits that differ per provider. Design the interface with batch operations and a capabilities contract (`Dimensions`, `MaxTokens`) from the start.
+4. **Bicep cannot create app secrets or group-to-role assignments** — The Graph Bicep extension cannot set `passwordCredentials` and cannot create `appRoleAssignedTo` assignments. Fix: plan explicit post-deploy steps (DeploymentScript or `az rest` CLI calls) for group assignments; use OIDC federated credentials for GitHub Actions (no secret needed); use managed identity for the container (no secret needed).
 
-5. **Qdrant collection not initialized correctly** — Missing payload indexes on `name`, `tags`, and `archived` fields cause slow filtered searches. Create payload indexes before inserting data and implement a startup health check (Aspire's Qdrant integration historically lacks built-in health checks — GitHub issue #5768).
+5. **Building against the March 2025 MCP auth spec** — The March spec had the MCP server acting as its own authorization server. The November 2025 spec (current) separates resource server from authorization server. Fix: implement `/.well-known/oauth-protected-resource` pointing to Entra; never implement `/authorize`, `/token`, or `/register` on the MCP server.
+
+6. **`PackAsTool` + `FrameworkReference` interaction** — Untested combination. If `dotnet pack` fails or produces an oversized package, the NuGet distribution channel breaks. Fix: run `dotnet pack` as the very first action in Phase 1. If it fails, the mitigation is a separate server-only project that is not packed as a tool.
+
+---
 
 ## Implications for Roadmap
 
-Based on the dependency graph from FEATURES.md and the build order from ARCHITECTURE.md, a four-phase structure is strongly recommended. Phases map directly to the feature research MVP breakdown.
+The dependency chain is strict. There is no safe parallelism between phases — each phase is a hard prerequisite for the next.
 
-### Phase 1: Foundation and Core MCP Server
+### Phase 1: HTTP Transport (no auth)
 
-**Rationale:** All features depend on Qdrant connectivity and MCP transport. Critical pitfalls #1, #2, and #3 must be addressed before any feature work or they will corrupt everything built on top. This phase establishes the interfaces that allow parallel work in Phase 2.
+**Rationale:** Foundation for everything. Auth, Docker, and CI/CD all require working HTTP endpoints. Can be validated entirely locally without Azure. The highest packaging risk (`PackAsTool` + `FrameworkReference`) is isolated here and must pass before proceeding.
 
-**Delivers:** Working MCP server with stdio transport, Qdrant connection, collection initialization with payload indexes, YAML round-trip parser, and the Core project interfaces. Basic `search-skills`, `load-skill`, `add-skill`, `update-skill`, `delete-skill`, and `list-skills` tools functional.
+**Delivers:**
+- `--sse` / `--streamable-http` / `--url` CLI flags working
+- `WebApplication`-based HTTP branch in `Program.cs`
+- Streamable HTTP + legacy SSE endpoints via `MapMcp()` with `EnableLegacySse = true`
+- Kestrel timeout configuration for long-lived SSE connections (2-hour `KeepAliveTimeout`)
+- CORS middleware (permissive in v1.1, tighten later)
+- `/health` endpoint (minimal liveness response)
+- Dockerfile updated: `EXPOSE`, `--streamable-http` entrypoint, auth env var placeholders
+- `dotnet pack` verified: NuGet tool still builds and installs correctly
+- Regression test: stdio mode works identically before and after
 
-**Addresses from FEATURES.md:** All 7 table stakes features (semantic search, CRUD, list, configurable embedding entry point, stdio transport, Qdrant config, YAML preservation)
+**Addresses:** Streamable HTTP table stakes, legacy SSE backward compat, configurable URL and port
 
-**Avoids:** Pitfall #1 (stdout), Pitfall #3 (lossy YAML), Pitfall #6 (collection initialization), Pitfall #7 (Aspire test infrastructure — get this working now before features pile up)
+**Avoids:** stdout contamination (mutually exclusive builder paths), deprecated SSE-only transport, Kestrel timeout drops, port conflicts (non-standard default port)
 
-**Research flag:** Standard patterns — well-documented MCP C# SDK and Qdrant Aspire integration. Skip phase research.
+**Research flag:** Standard patterns — `MapMcp()` and `WithHttpTransport()` are documented in official C# SDK docs with working samples. Skip per-phase research.
 
-### Phase 2: Embedding Providers and Search Quality
+---
 
-**Rationale:** The embedding abstraction must be designed as an interface before any provider is implemented (Pitfall #4). The dimension mismatch problem (Pitfall #2) must be solved here. Session tracking depends on search being stable. Search calibration (Pitfall #9) requires real embedding output to tune.
+### Phase 2: Entra Authentication
 
-**Delivers:** Full IEmbeddingProvider abstraction with at least two concrete providers (OpenAI + one local option: ONNX or Ollama). Startup dimension validation. Session tracking with TTL and "already loaded" awareness in search results. Tuned similarity thresholds per provider. Archive (soft-delete) operation.
+**Rationale:** Depends on working HTTP transport from Phase 1. JWT validation middleware plugs into the ASP.NET Core pipeline established there. Can be tested with `az account get-access-token` tokens immediately after a manual Entra app registration is created — no Bicep required yet.
 
-**Addresses from FEATURES.md:** Session tracking, archive, additional local embedding providers, configurable thresholds
+**Delivers:**
+- Entra app registration (manual or `az cli` — Bicep is Phase 3)
+- `Auth/AuthRegistration.cs`: `AddMicrosoftIdentityWebApi()` + `SkillsRead` / `SkillsWrite` policies
+- `AzureAd` config section support (`TenantId`, `ClientId`, `Audience`)
+- `MapMcp().RequireAuthorization()` — 401 and 403 responses with correct `WWW-Authenticate` headers
+- `/.well-known/oauth-protected-resource` endpoint (RFC 9728)
+- App roles (`SkillReader`, `SkillWriter`) with `groupMembershipClaims: "ApplicationGroup"`
+- `InMemorySessionTracker` updated to use MCP session ID in HTTP mode
+- Auth registration conditional on HTTP mode — stdio mode unchanged
 
-**Avoids:** Pitfall #2 (dimension mismatch), Pitfall #4 (leaky abstraction), Pitfall #5 (session lifecycle), Pitfall #9 (score miscalibration)
+**Addresses:** JWT validation, audience enforcement, scope enforcement, Protected Resource Metadata, app roles vs group GUIDs, az CLI developer convenience
 
-**Research flag:** Embedding provider batching APIs may need per-provider research, particularly for ONNX runtime integration. Flag for phase research if ONNX is included.
+**Avoids:** Audience mismatch, group claims on wrong manifest, March-spec auth server pattern, token passthrough confused deputy, groups overage
 
-### Phase 3: CLI, Developer Experience, and Distribution
+**Research flag:** Standard patterns — `Microsoft.Identity.Web` is extensively documented by Microsoft. The Protected Resource Metadata endpoint is a simple static `MapGet`. Skip per-phase research.
 
-**Rationale:** `--console` mode and `--setup` wizard share the same underlying services as MCP tools and only make sense once those services are stable. NuGet packaging is the final distribution step. These are the ecosystem differentiators that depend on a complete core.
+---
 
-**Delivers:** `--console` mode (single-shot JSON output + REPL), `--setup` wizard for 7+ agents with backup/dry-run safeguards, `--names` and `--summaries` output modes, bundled SKILL.md, `--reindex` migration command, NuGet tool package deployable via `dnx QdrantSkillsMCP`.
+### Phase 3: Bicep IaC
 
-**Addresses from FEATURES.md:** `--setup` multi-agent configuration, `--names`/`--summaries` modes, bundled SKILL.md, console mode, NuGet distribution, skills-guru integration (if in scope)
+**Rationale:** Depends on Phase 2 for the final auth config shape (ClientId, scopes, app role IDs) and Phase 1 for container port and entrypoint. Can be deployed manually first to validate infrastructure before wiring CI/CD. The Graph Bicep extension is the only MEDIUM-confidence area in the entire research — spike before committing to full implementation.
 
-**Avoids:** Pitfall #8 (dnx packaging misconfigurations — single framework target, full lifecycle test), Pitfall #12 (config file corruption — backup, dry-run, fallback to manual snippet)
+**Delivers:**
+- `infra/main.bicep` orchestrator + `main.bicepparam`
+- `infra/modules/entra-app.bicep`: app registration, scopes, service principal (Graph extension)
+- `infra/modules/container-apps.bicep`: Log Analytics workspace, ACR, Container Apps environment + app, user-assigned managed identity
+- Container App ingress (HTTPS, external), health probes, secrets (not plain env vars), managed identity for ACR pull, single-revision mode, min 1 replica
+- Post-deploy script / DeploymentScript for group-to-role assignments (documented Bicep limitation)
+- OIDC federated credential on deployment identity (prerequisite for Phase 4)
+- Parameters for tenant ID, client ID, Qdrant URL, embedding API key (as secrets)
 
-**Research flag:** Agent config file formats (Claude, Copilot, Codex, OpenCode) change between versions. Needs targeted research during phase planning to verify current config schemas for each agent.
+**Addresses:** Full Azure IaC, secrets not in env vars, health probes, single-revision zero-downtime mode, managed identity auth
 
-### Phase 4: Authentication and Enterprise Readiness
+**Avoids:** Bicep cannot create secrets (use managed identity + OIDC), Bicep cannot assign groups (post-deploy script), Entra replication delays (add `dependsOn` and retry in DeploymentScript), no `what-if` for Graph resources (document and accept)
 
-**Rationale:** Auth is explicitly deferred by FEATURES.md and PITFALLS.md recommends API key first with OAuth deferred. Implementing auth before the core is stable adds complexity that delays value delivery. API key auth is a small, well-understood addition; OAuth/OIDC is only needed for enterprise shared deployments.
+**Research flag:** MEDIUM confidence for Graph Bicep. `Microsoft.Graph/appRoleAssignedTo` behavior and the group assignment workflow need hands-on verification. Run a minimal spike (app reg + SP + one scope) in a test subscription before writing the full module.
 
-**Delivers:** API key authentication (bearer token middleware). OAuth/OIDC (optional, if enterprise demand exists). Security review of the full surface area.
+---
 
-**Addresses from FEATURES.md:** Dual auth feature (API key + OAuth/OIDC)
+### Phase 4: Docker and CI/CD
 
-**Avoids:** Pitfall #11 (OAuth over-engineering early)
+**Rationale:** Depends on all prior phases. The workflow references the final Dockerfile (Phase 1), the Bicep templates (Phase 3), and ACR and ACA resource names from deployed infrastructure. Automates what was manually validated in Phases 1–3.
 
-**Research flag:** OAuth/OIDC integration with .NET middleware and MCP's transport model is non-trivial. Flag for phase research before attempting implementation.
+**Delivers:**
+- `.github/workflows/ci.yml`: build + unit tests on every push and PR to main
+- `.github/workflows/deploy.yml`: OIDC Azure login → Docker build → ACR push (SHA tag) → `container-apps-deploy-action` revision deploy
+- Smoke test / health check curl after deploy
+- Images tagged `${{ github.sha }}` — never `latest`
+- GitHub Actions secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` (no client secret)
+- `vars`: `ACR_LOGIN_SERVER`, `RESOURCE_GROUP`, `CONTAINER_APP_NAME`
+- Integration test strategy: unit tests in CI; Aspire integration tests deferred (require Docker-in-Docker)
+
+**Addresses:** Automated deploy pipeline, image tagging, no secrets in workflows, gate deployment on passing tests
+
+**Avoids:** `latest` tag (unreliable rollback), service principal JSON secret (use OIDC), separate build and test jobs using different source trees
+
+**Research flag:** Standard patterns — `azure/login@v2` OIDC and `azure/container-apps-deploy-action@v1` have Microsoft-authored tutorials. Skip per-phase research.
+
+---
 
 ### Phase Ordering Rationale
 
-- The dependency graph from FEATURES.md is unambiguous: Qdrant connection and embedding provider are prerequisites for every feature. Core interfaces come before implementations.
-- The architecture build order (Core → Infrastructure → Executable → Tests) directly maps to Phase 1 establishing Core, Phase 2 completing Infrastructure, Phase 3 completing the executable surface, Phase 4 adding security.
-- Session tracking logically follows search stability (Phase 2) rather than being built speculatively in Phase 1.
-- The three critical pitfalls (stdout, dimension mismatch, lossy YAML) are all Phase 1 concerns — getting them right at the start prevents cascading failures.
-- Distribution (NuGet/dnx) and developer convenience (--setup, --console) are correctly last among core features — they wrap stable services.
+- HTTP before auth — there is no pipeline to protect without HTTP endpoints
+- Auth before Bicep — Bicep's Entra module needs the final scope and app role definitions; premature Bicep risks schema drift
+- Bicep before CI/CD — the deploy workflow references ACR URL, resource group, and app name that only exist after Bicep runs
+- No parallelism — all phases have strict dependency edges
+
+---
 
 ### Research Flags
 
-Phases needing deeper research during planning:
-- **Phase 2 (ONNX embedding provider):** ONNX runtime integration in .NET 10 with bundled model files has gotchas around model packaging in NuGet tools. Research specific ONNX model file bundling approach if local-first embedding is a priority.
-- **Phase 3 (agent config schemas):** Claude, Copilot, Codex, OpenCode, Docker Agent, Kilocode, and Factory Droid config formats and file locations should be verified against their current documentation before implementation. These change frequently.
-- **Phase 4 (OAuth/OIDC with MCP stdio):** The interaction between OAuth token validation and the stdio transport model is not well-documented. Research required before Phase 4 planning.
+**Needs per-phase research during planning:**
+- **Phase 3 (Bicep IaC):** Graph Bicep extension is GA but newer; `appRoleAssignedTo` resource behavior and group assignment workflow need hands-on spike before committing to the full `entra-app.bicep` module. Budget a spike day at the start of Phase 3.
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1:** All patterns are well-documented in official Microsoft and Qdrant docs. MCP C# SDK, Aspire Qdrant integration, and YamlDotNet usage are straightforward.
-- **Phase 2 (OpenAI + Ollama embedding providers):** Standard API patterns via Microsoft.Extensions.AI.OpenAI and OllamaSharp. No research needed.
-- **Phase 3 (NuGet tool packaging):** Standard `PackAsTool` pattern, well-documented in STACK.md.
+**Standard patterns (skip per-phase research):**
+- **Phase 1 (HTTP Transport):** `MapMcp()` and `WithHttpTransport()` are documented in official C# SDK docs.
+- **Phase 2 (Entra Auth):** `AddMicrosoftIdentityWebApi()` is extensively documented by Microsoft. Protected Resource Metadata is a static JSON endpoint.
+- **Phase 4 (CI/CD):** `azure/login@v2` OIDC and `container-apps-deploy-action@v1` have Microsoft-authored complete examples.
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All package versions verified on NuGet. Official SDK docs confirm patterns. No experimental dependencies. One correction required: Aspire 9.2 → 13.x. |
-| Features | HIGH | Five competitors analyzed. Table stakes derived from competitive landscape. Differentiators validated against gaps in existing tools. |
-| Architecture | HIGH | Patterns sourced from official MCP C# SDK documentation and .NET Blog. Component boundaries match the SDK's own examples. Build order derived from actual project dependencies. |
-| Pitfalls | HIGH | Pitfalls sourced from real GitHub issues (Aspire health check #5768, dnx #51831, #49815), real-world blog posts, and Qdrant documentation. stdout pollution is a confirmed, widely reported issue. |
+| Stack | HIGH | All packages verified on NuGet as of 2026-03-31. `PackAsTool` + `FrameworkReference` interaction is the one unverified combination — validate with `dotnet pack` in Phase 1 task 1. |
+| Features | HIGH | Derived from MCP 2025-03-26 spec (target) and 2025-11-25 spec (current). Feature boundaries are clear. Table stakes vs differentiators vs defer split is well-supported. |
+| Architecture | HIGH | Verified against official C# SDK docs, official samples, and Microsoft.Identity.Web docs. `WebApplication` vs `Host` builder split is an established .NET pattern. |
+| Pitfalls | HIGH | All critical pitfalls backed by official Microsoft docs or explicit MCP spec text. Bicep Graph limitations are documented by Microsoft. Auth spec version drift is confirmed against both spec versions. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **ONNX model bundling in NuGet tools:** STACK.md lists SmartComponents.LocalEmbeddings and Microsoft.ML.OnnxRuntime as options. The correct approach for bundling a model file inside a `PackAsTool` NuGet package for `dnx` consumption was not fully resolved. Address during Phase 2 planning if local-first embedding is prioritized.
+- **`PackAsTool` + `FrameworkReference` interaction:** The research assumes this works based on the standard console-app-with-ASP.NET-Core pattern. Not validated against the specific `PackAsTool=true` flag. Validate in Phase 1 task 1 before writing any other HTTP code. Fallback: a separate `QdrantSkillsMCP.Server` project that is not packed as a tool.
 
-- **skills-guru integration protocol:** The push/sync interface with skills-guru is mentioned as a Phase 3 feature but the skills-guru API/format was not researched. Needs discovery before Phase 3 planning if this integration is in scope.
+- **MCP session ID exposure to tool classes in HTTP mode:** The SDK exposes `IMcpServer` per session, but the exact API for tool classes to retrieve the current session ID and pass it to `ISessionTracker` needs code-level verification during Phase 1. Research confirms the need but not the exact call site.
 
-- **MCP session ID availability:** The session tracking feature relies on a per-connection session identifier. The MCP C# SDK's mechanism for exposing the connection/session ID to tool methods was not fully confirmed in the research. Verify SDK capabilities before designing the SessionTracker interface.
+- **Graph Bicep `appRoleAssignedTo` resource:** Research confirms group-to-role assignment requires post-deploy scripting, but the exact Bicep `DeploymentScript` pattern for Graph API calls was not validated end-to-end. Spike required at the start of Phase 3.
 
-- **Aspire 13.x Qdrant health check status:** GitHub issue #5768 documents missing health checks in Aspire's Qdrant integration. The resolution status of this issue as of Aspire 13.x was not confirmed. Verify during Phase 1 test infrastructure setup.
+- **Target client MCP spec version alignment:** Research targets MCP 2025-03-26 (C# SDK 1.2.0). Whether Claude Code, GitHub Copilot, and other target clients expect the March or November 2025 auth endpoints affects which discovery endpoints are strictly required. Verify client compatibility before finalizing the Protected Resource Metadata implementation in Phase 2.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [NuGet: ModelContextProtocol 1.1.0](https://www.nuget.org/packages/ModelContextProtocol/) — version, download count, package identity
-- [GitHub: modelcontextprotocol/csharp-sdk](https://github.com/modelcontextprotocol/csharp-sdk) — official SDK patterns, tool registration
-- [Microsoft .NET Blog: Build MCP server in C#](https://devblogs.microsoft.com/dotnet/build-a-model-context-protocol-mcp-server-in-csharp/) — WithTools/WithStdio pattern
-- [NuGet: Qdrant.Client 1.17.0](https://www.nuget.org/packages/Qdrant.Client) — version, gRPC transport
-- [Aspire Qdrant integration docs](https://learn.microsoft.com/en-us/dotnet/aspire/database/qdrant-component) — hosting + client setup
-- [NuGet: Aspire.Hosting.Qdrant 13.1.0 / Aspire.Qdrant.Client 13.1.2 / Aspire.Hosting.Testing 13.2.0](https://www.nuget.org/packages/Aspire.Hosting.Qdrant) — version verification
-- [Microsoft .NET Blog: AI and Vector Data Extensions GA](https://devblogs.microsoft.com/dotnet/ai-vector-data-dotnet-extensions-ga/) — M.E.AI GA announcement
-- [NuGet: OllamaSharp 5.4.16](https://www.nuget.org/packages/OllamaSharp) — implements IEmbeddingGenerator, deprecates M.E.AI.Ollama
-- [NuGet: xunit.v3 3.2.2](https://www.nuget.org/packages/xunit.v3) — MTP integration
-- [Qdrant Official MCP Server](https://github.com/qdrant/mcp-server-qdrant) — competitive analysis
-- [K-Dense Claude Skills MCP](https://github.com/K-Dense-AI/claude-skills-mcp) — competitive analysis
-- [SkillSync MCP](https://github.com/adianmasood/skillsync-mcp) — competitive analysis
-- [MCP C# SDK Official Documentation](https://csharp.sdk.modelcontextprotocol.io/) — architecture patterns
-- [Qdrant health check issue in Aspire](https://github.com/dotnet/aspire/issues/5768) — known gap
-- [Andrew Lock: dnx tool runner in .NET 10](https://andrewlock.net/exploring-dotnet-10-preview-features-5-running-one-off-dotnet-tools-with-dnx/) — packaging details
+- [NuGet: ModelContextProtocol.AspNetCore 1.2.0](https://www.nuget.org/packages/ModelContextProtocol.AspNetCore/) — package existence and version
+- [NuGet: Microsoft.Identity.Web 4.6.0](https://www.nuget.org/packages/Microsoft.Identity.Web) — package existence and version
+- [MCP C# SDK GitHub](https://github.com/modelcontextprotocol/csharp-sdk) — `MapMcp()`, `WithHttpTransport()`, `HttpServerTransportOptions`
+- [MCP 2025-03-26 Authorization Spec](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization) — auth flow, scope requirements
+- [MCP 2025-11-25 Authorization Spec](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) — Protected Resource Metadata (MUST), resource server pattern, token passthrough prohibition
+- [Microsoft Learn: Protected web API app configuration](https://learn.microsoft.com/en-us/entra/identity-platform/scenario-protected-web-api-app-configuration) — JWT validation, audience, scopes
+- [Microsoft Learn: Configure group claims and app roles](https://learn.microsoft.com/en-us/security/zero-trust/develop/configure-tokens-group-claims-app-roles) — `groupMembershipClaims`, app roles
+- [Microsoft Learn: Microsoft.App/containerApps Bicep reference](https://learn.microsoft.com/en-us/azure/templates/microsoft.app/containerapps) — Bicep resource types and API versions
+- [Microsoft Learn: Microsoft.Graph/applications Bicep reference](https://learn.microsoft.com/en-us/graph/templates/bicep/reference/applications) — Graph extension schema
+- [Microsoft Graph Bicep Limitations](https://learn.microsoft.com/en-us/graph/templates/bicep/limitations) — secrets and group assignment limitations
+- [Bicep Graph Extension GA Announcement](https://devblogs.microsoft.com/identity/bicep-templates-for-microsoft-entra-id-resources-is-ga/) — GA status confirmation (July 2025)
+- [Microsoft Learn: Deploy to Container Apps with GitHub Actions](https://learn.microsoft.com/en-us/azure/container-apps/github-actions) — OIDC federation, deploy action
+- [GitHub: Azure/container-apps-deploy-action](https://github.com/Azure/container-apps-deploy-action) — action parameters
 
 ### Secondary (MEDIUM confidence)
-- [skill-mcp Rust crate](https://lib.rs/crates/skill-mcp) — competitive analysis (Rust ecosystem)
-- [MCP stdio transport explained](https://medium.com/@laurentkubaski/understanding-mcp-stdio-transport-protocol-ae3d5daf64db) — stdout/stderr conflict
-- [Dealing with Vector Dimension Mismatch in Qdrant](https://medium.com/@epappas/dealing-with-vector-dimension-mismatch-my-experience-with-openai-embeddings-and-qdrant-vector-20a6e13b6d9f) — real-world dimension mismatch experience
-- [mjm.local.docs - .NET MCP with Pluggable Embeddings](https://medium.com/@markjackmilian/net-open-source-local-knowledge-base-with-mcp-semantic-search-and-pluggable-embeddings-981c135ee3e7) — reference architecture
-- [Server Tools - MCP C# SDK DeepWiki](https://deepwiki.com/modelcontextprotocol/csharp-sdk/2.1-server-tools) — tool registration patterns
-
-### Tertiary (LOW confidence)
-- [Concurrent dnx installation issue](https://github.com/dotnet/sdk/issues/51831) — known bug, may be resolved by .NET 10 GA
-- [dnx preview version issue](https://github.com/dotnet/sdk/issues/49815) — may be resolved; verify during Phase 3
+- [MCP C# SDK: Streamable HTTP Protocol (DeepWiki)](https://deepwiki.com/modelcontextprotocol/csharp-sdk/5.4-streamable-http-protocol) — transport internals
+- [Building Remote MCP Servers with .NET and Azure Container Apps](https://dev.to/willvelida/building-remote-mcp-servers-with-net-and-azure-container-apps-cc2) — end-to-end pattern validation
+- [Aaron Parecki on MCP OAuth Nov 2025](https://aaronparecki.com/2025/11/25/1/mcp-authorization-spec-update) — spec change analysis
+- [MCP Auth with Entra in .NET](https://nikiforovall.blog/dotnet/2025/09/02/mcp-auth.html) — implementation pattern
+- [Secure MCP server with Entra ID](https://damienbod.com/2025/09/23/implement-a-secure-mcp-server-using-oauth-and-entra-id/) — implementation reference
+- [MCP OAuth Pitfalls (Obsidian Security)](https://www.obsidiansecurity.com/blog/when-mcp-meets-oauth-common-pitfalls-leading-to-one-click-account-takeover) — audience validation and confused deputy patterns
 
 ---
-*Research completed: 2026-03-25*
+*Research completed: 2026-03-31*
 *Ready for roadmap: yes*
