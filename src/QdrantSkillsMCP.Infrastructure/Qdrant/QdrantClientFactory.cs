@@ -1,3 +1,4 @@
+using System.Net;
 using Grpc.Net.Client;
 using Grpc.Net.Client.Web;
 using Microsoft.Extensions.Logging;
@@ -81,28 +82,59 @@ public sealed class QdrantClientFactory
             apiKey: _options.QdrantApiKey);
     }
 
-    private QdrantClient CreateGrpcWebClient()
+    /// <summary>
+    /// Creates a GrpcChannel that forces HTTP/1.1 via GrpcWebHandler.
+    /// Azure App Service rejects HTTP/2 with HTTP_1_1_REQUIRED — the inner
+    /// HttpClientHandler must be pinned to HTTP/1.1 so GrpcWebHandler can
+    /// wrap the gRPC frames over a standard HTTP/1.1 POST.
+    /// </summary>
+    private GrpcChannel CreateHttp11Channel(GrpcWebMode mode)
     {
-        _logger.LogDebug("Creating Qdrant client with gRPC-Web (host={Host}, port={Port}, tls={Tls})",
-            _options.QdrantHost, _options.QdrantGrpcPort, _options.UseTls);
         var scheme = _options.UseTls ? "https" : "http";
         var address = $"{scheme}://{_options.QdrantHost}:{_options.QdrantGrpcPort}";
-        var handler = new GrpcWebHandler(GrpcWebMode.GrpcWeb, new HttpClientHandler());
-        var channel = GrpcChannel.ForAddress(address, new GrpcChannelOptions { HttpHandler = handler });
+
+        // Build handler chain: ApiKeyHandler → GrpcWebHandler → HttpClientHandler
+        HttpMessageHandler handler = new HttpClientHandler();
+        handler = new GrpcWebHandler(mode, handler) { HttpVersion = HttpVersion.Version11 };
+
+        if (!string.IsNullOrEmpty(_options.QdrantApiKey))
+            handler = new ApiKeyDelegatingHandler(_options.QdrantApiKey, handler);
+
+        return GrpcChannel.ForAddress(address, new GrpcChannelOptions { HttpHandler = handler });
+    }
+
+    /// <summary>
+    /// Injects the Qdrant api-key header into every outgoing HTTP request.
+    /// Used for gRPC-Web/HTTP paths where the QdrantClient constructor doesn't
+    /// accept an apiKey parameter.
+    /// </summary>
+    private sealed class ApiKeyDelegatingHandler(string apiKey, HttpMessageHandler inner)
+        : DelegatingHandler(inner)
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            request.Headers.TryAddWithoutValidation("api-key", apiKey);
+            return base.SendAsync(request, cancellationToken);
+        }
+    }
+
+    private QdrantClient CreateGrpcWebClient()
+    {
+        _logger.LogDebug("Creating Qdrant client with gRPC-Web over HTTP/1.1 (host={Host}, port={Port}, tls={Tls})",
+            _options.QdrantHost, _options.QdrantGrpcPort, _options.UseTls);
+        var channel = CreateHttp11Channel(GrpcWebMode.GrpcWeb);
         var grpcClient = new QdrantGrpcClient(channel);
         return new QdrantClient(grpcClient);
     }
 
     private QdrantClient CreateHttpClient()
     {
-        _logger.LogDebug("Creating Qdrant client with gRPC-Web text mode (host={Host}, port={Port}, tls={Tls})",
+        _logger.LogDebug("Creating Qdrant client with gRPC-Web text over HTTP/1.1 (host={Host}, port={Port}, tls={Tls})",
             _options.QdrantHost, _options.QdrantGrpcPort, _options.UseTls);
         _logger.LogWarning("HTTP/REST mode uses gRPC-Web text encoding for maximum HTTP/1.1 compatibility. " +
             "Consider gRPC-Web (grpc-web) for better performance.");
-        var scheme = _options.UseTls ? "https" : "http";
-        var address = $"{scheme}://{_options.QdrantHost}:{_options.QdrantGrpcPort}";
-        var handler = new GrpcWebHandler(GrpcWebMode.GrpcWebText, new HttpClientHandler());
-        var channel = GrpcChannel.ForAddress(address, new GrpcChannelOptions { HttpHandler = handler });
+        var channel = CreateHttp11Channel(GrpcWebMode.GrpcWebText);
         var grpcClient = new QdrantGrpcClient(channel);
         return new QdrantClient(grpcClient);
     }

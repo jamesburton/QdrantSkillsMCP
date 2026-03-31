@@ -65,14 +65,36 @@ public static class ServiceRegistration
         // Bind configuration
         services.Configure<QdrantSkillsOptions>(config.GetSection(QdrantSkillsOptions.SectionName));
 
-        // QdrantClientFactory -- creates protocol-aware QdrantClient
-        services.AddSingleton<QdrantClientFactory>();
-
-        // QdrantClient -- singleton, created via factory
-        services.AddSingleton(sp =>
+        // IQdrantOperations -- singleton, protocol selected from config
+        services.AddSingleton<IQdrantOperations>(sp =>
         {
-            var factory = sp.GetRequiredService<QdrantClientFactory>();
-            return factory.Create();
+            var options = sp.GetRequiredService<IOptions<QdrantSkillsOptions>>().Value;
+            var protocol = options.QdrantProtocol?.ToLowerInvariant();
+
+            if (protocol is "http" or "rest")
+            {
+                // REST API path -- for Azure App Service-hosted Qdrant (port 443, no gRPC)
+                var scheme = options.UseTls ? "https" : "http";
+                var port = options.QdrantRestPort > 0 ? options.QdrantRestPort : (options.UseTls ? 443 : 6333);
+                var baseUri = new Uri($"{scheme}://{options.QdrantHost}:{port}");
+
+                var httpClient = new HttpClient { BaseAddress = baseUri };
+                if (!string.IsNullOrEmpty(options.QdrantApiKey))
+                    httpClient.DefaultRequestHeaders.Add("api-key", options.QdrantApiKey);
+
+                var logger = sp.GetRequiredService<ILogger<RestQdrantOperations>>();
+                return new RestQdrantOperations(httpClient, logger);
+            }
+            else
+            {
+                // gRPC path -- default for localhost
+                var grpcClient = new global::Qdrant.Client.QdrantClient(
+                    options.QdrantHost,
+                    options.QdrantGrpcPort,
+                    https: options.UseTls,
+                    apiKey: options.QdrantApiKey);
+                return new GrpcQdrantOperations(grpcClient);
+            }
         });
 
         // DimensionValidator -- IHostedService that validates embedding dimensions on startup

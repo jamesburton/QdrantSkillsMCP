@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Xunit;
-using Qdrant.Client;
 using QdrantSkillsMCP.Infrastructure.Health;
+using QdrantSkillsMCP.Infrastructure.Qdrant;
 
 namespace QdrantSkillsMCP.UnitTests.Health;
 
@@ -10,9 +10,10 @@ public class QdrantHealthCheckTests
     [Fact]
     public async Task CheckHealthAsync_WhenQdrantThrows_ReturnsDegraded()
     {
-        // Arrange: client pointing at a non-listening port will throw on HealthAsync
-        var client = new QdrantClient("localhost", 19999);
-        var healthCheck = new QdrantHealthCheck(client);
+        // Arrange: GrpcQdrantOperations wrapping a client pointing at non-listening port
+        var client = new global::Qdrant.Client.QdrantClient("localhost", 19999);
+        var operations = new GrpcQdrantOperations(client);
+        var healthCheck = new QdrantHealthCheck(operations);
         var context = new HealthCheckContext
         {
             Registration = new HealthCheckRegistration("qdrant", healthCheck, null, null)
@@ -30,12 +31,10 @@ public class QdrantHealthCheckTests
     [Fact]
     public void CheckHealthAsync_HealthyPath_ReturnsHealthy_CodeCheck()
     {
-        // Verify the health check class structure: Healthy result is returned on success path.
-        // We can't easily test the healthy path without a running Qdrant,
-        // so verify the class compiles and the Degraded path works above.
-        // Integration tests in 05-03 will cover the happy path with Aspire.
-        var client = new QdrantClient("localhost", 6334);
-        var healthCheck = new QdrantHealthCheck(client);
+        // Verify the health check class structure compiles with IQdrantOperations.
+        var client = new global::Qdrant.Client.QdrantClient("localhost", 6334);
+        var operations = new GrpcQdrantOperations(client);
+        var healthCheck = new QdrantHealthCheck(operations);
         Assert.NotNull(healthCheck);
     }
 }

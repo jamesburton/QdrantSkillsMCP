@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using QdrantSkillsMCP.Core.Interfaces;
 using QdrantSkillsMCP.Core.Models;
@@ -17,14 +16,14 @@ namespace QdrantSkillsMCP.Infrastructure.Qdrant;
 /// </summary>
 public sealed class QdrantSkillRepository : ISkillRepository
 {
-    private readonly QdrantClient _client;
+    private readonly IQdrantOperations _client;
     private readonly QdrantSkillsOptions _options;
     private readonly CollectionInitializer _collectionInitializer;
     private readonly SkillParser _parser;
     private readonly ILogger<QdrantSkillRepository> _logger;
 
     public QdrantSkillRepository(
-        QdrantClient client,
+        IQdrantOperations client,
         IOptions<QdrantSkillsOptions> options,
         CollectionInitializer collectionInitializer,
         SkillParser parser,

@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Qdrant.Client;
+using QdrantSkillsMCP.Infrastructure.Qdrant;
 
 namespace QdrantSkillsMCP.Infrastructure.Health;
 
@@ -9,16 +9,16 @@ namespace QdrantSkillsMCP.Infrastructure.Health;
 /// </summary>
 public sealed class QdrantHealthCheck : IHealthCheck
 {
-    private readonly QdrantClient _client;
+    private readonly IQdrantOperations _qdrant;
 
-    public QdrantHealthCheck(QdrantClient client) => _client = client;
+    public QdrantHealthCheck(IQdrantOperations qdrant) => _qdrant = qdrant;
 
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         try
         {
-            await _client.HealthAsync(cancellationToken);
+            await _qdrant.ListCollectionsAsync(cancellationToken);
             return HealthCheckResult.Healthy("Qdrant reachable");
         }
         catch (Exception ex)

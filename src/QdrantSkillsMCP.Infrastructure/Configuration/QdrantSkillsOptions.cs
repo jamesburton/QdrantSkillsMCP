@@ -16,6 +16,9 @@ public sealed class QdrantSkillsOptions
     /// <summary>Qdrant gRPC port. Default: 6334.</summary>
     public int QdrantGrpcPort { get; set; } = 6334;
 
+    /// <summary>Qdrant REST API port. Default: 6333 (or 443 for TLS hosts).</summary>
+    public int QdrantRestPort { get; set; } = 6333;
+
     /// <summary>Optional Qdrant API key for authenticated instances.</summary>
     public string? QdrantApiKey { get; set; }
 

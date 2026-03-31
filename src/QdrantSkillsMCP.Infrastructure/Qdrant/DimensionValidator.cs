@@ -3,7 +3,6 @@ using System.Text;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using QdrantSkillsMCP.Core.Interfaces;
 using QdrantSkillsMCP.Infrastructure.Configuration;
@@ -18,13 +17,13 @@ namespace QdrantSkillsMCP.Infrastructure.Qdrant;
 /// </summary>
 public sealed class DimensionValidator : IHostedService
 {
-    private readonly QdrantClient _client;
+    private readonly IQdrantOperations _client;
     private readonly IEmbeddingService _embeddingService;
     private readonly QdrantSkillsOptions _options;
     private readonly ILogger<DimensionValidator> _logger;
 
     public DimensionValidator(
-        QdrantClient client,
+        IQdrantOperations client,
         IEmbeddingService embeddingService,
         IOptions<QdrantSkillsOptions> options,
         ILogger<DimensionValidator> logger)
@@ -41,11 +40,14 @@ public sealed class DimensionValidator : IHostedService
         {
             await RunValidationAsync(ct);
         }
-        catch (Grpc.Core.RpcException ex)
+        catch (Exception ex) when (ex is Grpc.Core.RpcException or HttpRequestException)
         {
+            var detail = ex is Grpc.Core.RpcException rpc
+                ? $"{rpc.Status.StatusCode}: {rpc.Status.Detail}"
+                : $"{ex.GetType().Name}: {ex.Message}";
             Console.Error.WriteLine(
                 $"[DimensionValidator] Qdrant unreachable at startup — dimension validation skipped. " +
-                $"Skills will not be available until Qdrant is reachable. ({ex.Status.StatusCode}: {ex.Status.Detail})");
+                $"Skills will not be available until Qdrant is reachable. ({detail})");
             _logger.LogWarning(ex,
                 "Qdrant unreachable at startup — dimension validation skipped. " +
                 "Skills will not be available until Qdrant is reachable.");

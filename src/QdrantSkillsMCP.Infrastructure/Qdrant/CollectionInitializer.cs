@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Options;
-using Qdrant.Client;
 using Qdrant.Client.Grpc;
 using QdrantSkillsMCP.Infrastructure.Configuration;
 
@@ -12,12 +11,12 @@ namespace QdrantSkillsMCP.Infrastructure.Qdrant;
 /// </summary>
 public sealed class CollectionInitializer : IDisposable
 {
-    private readonly QdrantClient _client;
+    private readonly IQdrantOperations _client;
     private readonly QdrantSkillsOptions _options;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private volatile bool _initialized;
 
-    public CollectionInitializer(QdrantClient client, IOptions<QdrantSkillsOptions> options)
+    public CollectionInitializer(IQdrantOperations client, IOptions<QdrantSkillsOptions> options)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
