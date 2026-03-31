@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shared Server
 status: in_progress
-stopped_at: Milestone v1.1 started — defining requirements
-last_updated: "2026-03-31T10:07:00Z"
-last_activity: 2026-03-31 -- Milestone v1.1 Shared Server started
+stopped_at: Roadmap created — ready to plan Phase 5
+last_updated: "2026-03-31T11:00:00Z"
+last_activity: 2026-03-31 -- Roadmap created for v1.1 (4 phases, 34 requirements)
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Agents can semantically search and retrieve the right skills at the right time
-**Current focus:** Milestone v1.1 — Shared Server with Azure Entra auth + HTTP transports + cloud deployment
+**Current focus:** Phase 5 — HTTP Transport
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 5 of 8 (HTTP Transport) — first phase of v1.1
 Plan: —
-Status: Defining requirements
+Status: Ready to plan
 
 Progress: [░░░░░░░░░░] 0%
 
-## Accumulated Context (from v1.0)
+## Performance Metrics
 
 **Velocity (v1.0 baseline):**
 - Total plans completed: 14
@@ -43,12 +43,25 @@ Progress: [░░░░░░░░░░] 0%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-core-mcp-server | 5 | 32min | 6min |
-| 02-search-intelligence-and-embedding-providers | 3 | 23min | 8min |
-| 03-cli-distribution-and-bundled-skill | 4 | 35min | 9min |
-| 04-configuration-management | 2 | ~10min | 5min |
+| 02-search-and-embeddings | 3 | 23min | 8min |
+| 03-cli-and-distribution | 4 | 35min | 9min |
+| 04-configuration | 2 | ~10min | 5min |
+
+## Accumulated Context
+
+### Decisions
+
+- v1.0 shipped 2026-03-30 with 14 plans across 4 phases
+- v1.1 roadmap: strict linear dependency (HTTP -> Auth -> IaC -> CI/CD)
+- Phase 7 (Bicep IaC) flagged MEDIUM confidence — Graph extension spike needed
+
+### Blockers/Concerns
+
+- PackAsTool + FrameworkReference interaction untested — validate in Phase 5 task 1
+- Graph Bicep appRoleAssignedTo needs hands-on spike before Phase 7 full implementation
 
 ## Session Continuity
 
 Last session: 2026-03-31
-Stopped at: Milestone v1.1 started, proceeding to requirements definition
-Next step: Define requirements and create roadmap
+Stopped at: Roadmap created for v1.1 Shared Server milestone
+Next step: `/gsd:plan-phase 5` to plan HTTP Transport phase

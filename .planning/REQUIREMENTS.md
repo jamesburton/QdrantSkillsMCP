@@ -94,46 +94,46 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRANS-01 | — | Pending |
-| TRANS-02 | — | Pending |
-| TRANS-03 | — | Pending |
-| TRANS-04 | — | Pending |
-| TRANS-05 | — | Pending |
-| TRANS-06 | — | Pending |
-| TRANS-07 | — | Pending |
-| TRANS-08 | — | Pending |
-| TRANS-09 | — | Pending |
-| TRANS-10 | — | Pending |
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| AUTH-05 | — | Pending |
-| AUTH-06 | — | Pending |
-| AUTH-07 | — | Pending |
-| AUTH-08 | — | Pending |
-| AUTH-09 | — | Pending |
-| IAC-01 | — | Pending |
-| IAC-02 | — | Pending |
-| IAC-03 | — | Pending |
-| IAC-04 | — | Pending |
-| IAC-05 | — | Pending |
-| IAC-06 | — | Pending |
-| IAC-07 | — | Pending |
-| IAC-08 | — | Pending |
-| IAC-09 | — | Pending |
-| IAC-10 | — | Pending |
-| CICD-01 | — | Pending |
-| CICD-02 | — | Pending |
-| CICD-03 | — | Pending |
-| CICD-04 | — | Pending |
-| CICD-05 | — | Pending |
+| TRANS-01 | Phase 5 | Pending |
+| TRANS-02 | Phase 5 | Pending |
+| TRANS-03 | Phase 5 | Pending |
+| TRANS-04 | Phase 5 | Pending |
+| TRANS-05 | Phase 5 | Pending |
+| TRANS-06 | Phase 5 | Pending |
+| TRANS-07 | Phase 5 | Pending |
+| TRANS-08 | Phase 5 | Pending |
+| TRANS-09 | Phase 5 | Pending |
+| TRANS-10 | Phase 5 | Pending |
+| AUTH-01 | Phase 6 | Pending |
+| AUTH-02 | Phase 6 | Pending |
+| AUTH-03 | Phase 6 | Pending |
+| AUTH-04 | Phase 6 | Pending |
+| AUTH-05 | Phase 6 | Pending |
+| AUTH-06 | Phase 6 | Pending |
+| AUTH-07 | Phase 6 | Pending |
+| AUTH-08 | Phase 6 | Pending |
+| AUTH-09 | Phase 6 | Pending |
+| IAC-01 | Phase 7 | Pending |
+| IAC-02 | Phase 7 | Pending |
+| IAC-03 | Phase 7 | Pending |
+| IAC-04 | Phase 7 | Pending |
+| IAC-05 | Phase 7 | Pending |
+| IAC-06 | Phase 7 | Pending |
+| IAC-07 | Phase 7 | Pending |
+| IAC-08 | Phase 7 | Pending |
+| IAC-09 | Phase 7 | Pending |
+| IAC-10 | Phase 7 | Pending |
+| CICD-01 | Phase 8 | Pending |
+| CICD-02 | Phase 8 | Pending |
+| CICD-03 | Phase 8 | Pending |
+| CICD-04 | Phase 8 | Pending |
+| CICD-05 | Phase 8 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 34 total
-- Mapped to phases: 0
-- Unmapped: 34 (pending roadmap creation)
+- Mapped to phases: 34
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-03-31 after initial definition*
+*Last updated: 2026-03-31 — traceability updated after roadmap creation*
