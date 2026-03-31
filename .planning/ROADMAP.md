@@ -39,12 +39,16 @@ Full phase details: [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADM
 **Depends on**: Phase 4 (v1.0 complete)
 **Requirements**: TRANS-01, TRANS-02, TRANS-03, TRANS-04, TRANS-05, TRANS-06, TRANS-07, TRANS-08, TRANS-09, TRANS-10
 **Success Criteria** (what must be TRUE):
-  1. Running with `--streamable-http` starts an HTTP server that accepts MCP requests on POST/GET/DELETE endpoints
-  2. Running with `--sse` starts legacy SSE transport with GET /sse and POST /message endpoints
-  3. Running with no transport flag (or `--stdio`) works identically to v1.0 — no regressions in existing MCP tool behavior
-  4. GET /health returns a liveness response suitable for container health probes
-  5. `dotnet pack` produces a valid NuGet tool package that installs and runs correctly with the ASP.NET Core FrameworkReference included
-**Plans**: TBD
+  1. Running with `--http` starts an HTTP server serving both Streamable HTTP and legacy SSE via single `MapMcp()` call
+  2. Running with no transport flag (or `--stdio`) works identically to v1.0 — no regressions in existing MCP tool behavior
+  3. GET /health returns a liveness response suitable for container health probes (degraded, not unhealthy, when Qdrant is down)
+  4. `dotnet pack` produces a valid NuGet tool package that installs and runs correctly with the ASP.NET Core FrameworkReference included
+  5. Dockerfile defaults to `--http` mode on port 8080
+**Plans:** 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — Package upgrades and PackAsTool + FrameworkReference validation
+- [ ] 05-02-PLAN.md — HTTP transport branch, health endpoints, URL config, and unit tests
+- [ ] 05-03-PLAN.md — Dockerfile update and stdio regression verification
 
 ### Phase 6: Entra Authentication
 **Goal**: HTTP endpoints are protected by Azure Entra JWT validation with read/write scope enforcement and MCP-compliant discovery
@@ -92,7 +96,7 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8
 | 2. Search and Embeddings | v1.0 | 3/3 | Complete | 2026-03-25 |
 | 3. CLI and Distribution | v1.0 | 4/4 | Complete | 2026-03-26 |
 | 4. Configuration | v1.0 | 2/2 | Complete | 2026-03-27 |
-| 5. HTTP Transport | v1.1 | 0/0 | Not started | - |
+| 5. HTTP Transport | v1.1 | 0/3 | Planned | - |
 | 6. Entra Authentication | v1.1 | 0/0 | Not started | - |
 | 7. Bicep IaC | v1.1 | 0/0 | Not started | - |
 | 8. CI/CD Pipeline | v1.1 | 0/0 | Not started | - |
