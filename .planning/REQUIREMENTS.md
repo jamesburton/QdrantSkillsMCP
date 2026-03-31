@@ -9,13 +9,13 @@ Requirements for shared server milestone. Each maps to roadmap phases.
 
 ### HTTP Transport
 
-- [ ] **TRANS-01**: Server supports Streamable HTTP transport (POST/GET/DELETE /) via --streamable-http or --url {URL} flags
-- [ ] **TRANS-02**: Server supports legacy HTTP/SSE transport (GET /sse, POST /message) via --sse flag with EnableLegacySse=true
-- [ ] **TRANS-03**: Server supports explicit --stdio flag (remains default when no transport flag specified)
-- [ ] **TRANS-04**: Server exposes /health endpoint returning liveness status for container probes
-- [ ] **TRANS-05**: Server configures CORS middleware in HTTP mode for browser-based MCP clients
-- [ ] **TRANS-06**: Server configures Kestrel KeepAliveTimeout (2 hours) for long-lived SSE connections
-- [ ] **TRANS-07**: Configurable listen URL/port via --url, ASPNETCORE_URLS, or config settings
+- [x] **TRANS-01**: Server supports Streamable HTTP transport (POST/GET/DELETE /) via --streamable-http or --url {URL} flags
+- [x] **TRANS-02**: Server supports legacy HTTP/SSE transport (GET /sse, POST /message) via --sse flag with EnableLegacySse=true
+- [x] **TRANS-03**: Server supports explicit --stdio flag (remains default when no transport flag specified)
+- [x] **TRANS-04**: Server exposes /health endpoint returning liveness status for container probes
+- [x] **TRANS-05**: Server configures CORS middleware in HTTP mode for browser-based MCP clients
+- [x] **TRANS-06**: Server configures Kestrel KeepAliveTimeout (2 hours) for long-lived SSE connections
+- [x] **TRANS-07**: Configurable listen URL/port via --url, ASPNETCORE_URLS, or config settings
 - [x] **TRANS-08**: dotnet pack with PackAsTool=true + FrameworkReference to ASP.NET Core produces valid NuGet package
 - [ ] **TRANS-09**: Existing stdio mode works identically after HTTP transport additions (regression verified)
 - [ ] **TRANS-10**: Dockerfile updated with EXPOSE, --streamable-http entrypoint, and auth env var placeholders
@@ -94,13 +94,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRANS-01 | Phase 5 | Pending |
-| TRANS-02 | Phase 5 | Pending |
-| TRANS-03 | Phase 5 | Pending |
-| TRANS-04 | Phase 5 | Pending |
-| TRANS-05 | Phase 5 | Pending |
-| TRANS-06 | Phase 5 | Pending |
-| TRANS-07 | Phase 5 | Pending |
+| TRANS-01 | Phase 5 | Complete |
+| TRANS-02 | Phase 5 | Complete |
+| TRANS-03 | Phase 5 | Complete |
+| TRANS-04 | Phase 5 | Complete |
+| TRANS-05 | Phase 5 | Complete |
+| TRANS-06 | Phase 5 | Complete |
+| TRANS-07 | Phase 5 | Complete |
 | TRANS-08 | Phase 5 | Complete |
 | TRANS-09 | Phase 5 | Pending |
 | TRANS-10 | Phase 5 | Pending |

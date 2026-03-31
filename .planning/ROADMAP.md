@@ -47,7 +47,7 @@ Full phase details: [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADM
 **Plans:** 3 plans
 Plans:
 - [x] 05-01-PLAN.md — Package upgrades and PackAsTool + FrameworkReference validation
-- [ ] 05-02-PLAN.md — HTTP transport branch, health endpoints, URL config, and unit tests
+- [x] 05-02-PLAN.md — HTTP transport branch, health endpoints, URL config, and unit tests
 - [ ] 05-03-PLAN.md — Dockerfile update and stdio regression verification
 
 ### Phase 6: Entra Authentication
@@ -96,7 +96,7 @@ Phases execute in numeric order: 5 -> 6 -> 7 -> 8
 | 2. Search and Embeddings | v1.0 | 3/3 | Complete | 2026-03-25 |
 | 3. CLI and Distribution | v1.0 | 4/4 | Complete | 2026-03-26 |
 | 4. Configuration | v1.0 | 2/2 | Complete | 2026-03-27 |
-| 5. HTTP Transport | v1.1 | 0/3 | Planned | - |
+| 5. HTTP Transport | v1.1 | 2/3 | In Progress | - |
 | 6. Entra Authentication | v1.1 | 0/0 | Not started | - |
 | 7. Bicep IaC | v1.1 | 0/0 | Not started | - |
 | 8. CI/CD Pipeline | v1.1 | 0/0 | Not started | - |
