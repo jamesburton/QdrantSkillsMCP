@@ -83,4 +83,25 @@ public sealed class QdrantSkillsOptions
     /// Values: "rename", "suffix", "replace", or null (hard fail).
     /// </summary>
     public string? MismatchResolution { get; set; }
+
+    /// <summary>
+    /// Qdrant connection protocol. Values: "grpc" (default for localhost), "grpc-web" (Azure-compatible), "http" (REST API).
+    /// Can also be set via QDRANT_SKILLS__QdrantProtocol env var or --qdrant-grpc / --qdrant-http flags.
+    /// </summary>
+    public string? QdrantProtocol { get; set; }
+}
+
+/// <summary>
+/// Qdrant connection protocol types.
+/// </summary>
+public enum QdrantProtocolType
+{
+    /// <summary>Native gRPC (default for localhost).</summary>
+    Grpc,
+
+    /// <summary>gRPC-Web over HTTP/1.1 (Azure App Service compatible).</summary>
+    GrpcWeb,
+
+    /// <summary>HTTP/REST API fallback.</summary>
+    Http
 }
