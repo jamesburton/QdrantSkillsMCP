@@ -1,4 +1,5 @@
 using QdrantSkillsMCP.Infrastructure.Transport;
+using Xunit;
 
 namespace QdrantSkillsMCP.UnitTests.Transport;
 

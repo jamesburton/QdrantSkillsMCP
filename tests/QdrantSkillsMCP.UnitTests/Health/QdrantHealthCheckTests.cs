@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Xunit;
 using Qdrant.Client;
 using QdrantSkillsMCP.Infrastructure.Health;
 
