@@ -16,7 +16,7 @@ Requirements for shared server milestone. Each maps to roadmap phases.
 - [ ] **TRANS-05**: Server configures CORS middleware in HTTP mode for browser-based MCP clients
 - [ ] **TRANS-06**: Server configures Kestrel KeepAliveTimeout (2 hours) for long-lived SSE connections
 - [ ] **TRANS-07**: Configurable listen URL/port via --url, ASPNETCORE_URLS, or config settings
-- [ ] **TRANS-08**: dotnet pack with PackAsTool=true + FrameworkReference to ASP.NET Core produces valid NuGet package
+- [x] **TRANS-08**: dotnet pack with PackAsTool=true + FrameworkReference to ASP.NET Core produces valid NuGet package
 - [ ] **TRANS-09**: Existing stdio mode works identically after HTTP transport additions (regression verified)
 - [ ] **TRANS-10**: Dockerfile updated with EXPOSE, --streamable-http entrypoint, and auth env var placeholders
 
@@ -101,7 +101,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRANS-05 | Phase 5 | Pending |
 | TRANS-06 | Phase 5 | Pending |
 | TRANS-07 | Phase 5 | Pending |
-| TRANS-08 | Phase 5 | Pending |
+| TRANS-08 | Phase 5 | Complete |
 | TRANS-09 | Phase 5 | Pending |
 | TRANS-10 | Phase 5 | Pending |
 | AUTH-01 | Phase 6 | Pending |

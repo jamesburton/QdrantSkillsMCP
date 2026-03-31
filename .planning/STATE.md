@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Shared Server
-status: planning
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-31T10:41:12.508Z"
+status: in_progress
+stopped_at: Completed 05-01-PLAN.md (Package validation)
+last_updated: "2026-03-31T11:41:32Z"
+last_activity: 2026-03-31 -- Plan 05-01 executed (MCP SDK upgrade + PackAsTool validation)
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 3
+  completed_plans: 1
+  percent: 33
 ---
 
 # Project State
@@ -25,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 5 of 8 (HTTP Transport) — first phase of v1.1
-Plan: —
-Status: Ready to plan
+Plan: 1 of 3 in current phase -- COMPLETE
+Status: Plan 05-01 complete, plans 05-02 and 05-03 remaining
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
@@ -54,14 +55,16 @@ Progress: [░░░░░░░░░░] 0%
 - v1.0 shipped 2026-03-30 with 14 plans across 4 phases
 - v1.1 roadmap: strict linear dependency (HTTP -> Auth -> IaC -> CI/CD)
 - Phase 7 (Bicep IaC) flagged MEDIUM confidence — Graph extension spike needed
+- [05-01]: PackAsTool + FrameworkReference confirmed compatible (D-10 validated)
+- [05-01]: ModelContextProtocol upgraded 1.1.0 -> 1.2.0, AspNetCore 1.2.0 added
 
 ### Blockers/Concerns
 
-- PackAsTool + FrameworkReference interaction untested — validate in Phase 5 task 1
+- ~~PackAsTool + FrameworkReference interaction untested~~ — RESOLVED in 05-01 (validated successfully)
 - Graph Bicep appRoleAssignedTo needs hands-on spike before Phase 7 full implementation
 
 ## Session Continuity
 
-Last session: 2026-03-31T10:41:12.500Z
-Stopped at: Phase 5 context gathered
-Next step: `/gsd:plan-phase 5` to plan HTTP Transport phase
+Last session: 2026-03-31T11:41:32Z
+Stopped at: Completed 05-01-PLAN.md (Package validation)
+Resume file: .planning/phases/05-http-transport/05-02-PLAN.md

@@ -46,7 +46,7 @@ Full phase details: [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADM
   5. Dockerfile defaults to `--http` mode on port 8080
 **Plans:** 3 plans
 Plans:
-- [ ] 05-01-PLAN.md — Package upgrades and PackAsTool + FrameworkReference validation
+- [x] 05-01-PLAN.md — Package upgrades and PackAsTool + FrameworkReference validation
 - [ ] 05-02-PLAN.md — HTTP transport branch, health endpoints, URL config, and unit tests
 - [ ] 05-03-PLAN.md — Dockerfile update and stdio regression verification
 
