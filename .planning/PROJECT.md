@@ -8,6 +8,17 @@ A .NET 10 C# MCP (Model Context Protocol) server that provides vector-based skil
 
 Agents can semantically search and retrieve the right skills at the right time — turning a flat collection of skill files into an intelligent, context-aware skill library accessible to any MCP-compatible agent.
 
+## Current Milestone: v1.1 Shared Server
+
+**Goal:** Enable QdrantSkillsMCP to run as a shared network server with Azure Entra authentication and full cloud deployment.
+
+**Target features:**
+- Multi-transport: `--stdio` (default), `--sse` (HTTP/SSE), `--streamable-http` / `--url` (Streamable HTTP per MCP 2025-03-26)
+- MCP OAuth 2.0 via Azure Entra — JWT validation, read/write scopes, `az` CLI persisted login support
+- Entra app registration "Q-Hub MCPs" with 4 group assignments (qhub-people-dev/devops/qa/ba)
+- Bicep IaC: Entra app reg + Azure Container Apps (primary) + App Service (alternative)
+- GitHub Actions CI/CD: build → push image → deploy to Azure Container Apps
+
 ## Requirements
 
 ### Validated
@@ -32,9 +43,17 @@ Agents can semantically search and retrieve the right skills at the right time �
 - ✓ Full XUnit v3 (MTP) test coverage using Aspire testing framework — v1.0
 - ✓ Layered configuration (env > project > user > default), `--config` CLI with 8 subcommands, secret masking, TLS auto-detection — v1.0
 
-### Active
+### Active (v1.1)
 
-- [ ] Authentication: API key (bearer token) for simple cases, OAuth/OIDC for enterprise
+- [ ] Multi-transport support: `--stdio` (default), `--sse` (HTTP/SSE), `--streamable-http` / `--url {URL}` (Streamable HTTP)
+- [ ] MCP OAuth 2.0 authentication via Azure Entra — JWT validation, read/write permission scopes
+- [ ] `az` CLI persisted login support for MCP OAuth flow (developer convenience)
+- [ ] Entra app registration "Q-Hub MCPs": read/write scopes, qhub-people-dev/devops/qa/ba group assignments
+- [ ] Bicep IaC: Entra app reg + Azure Container Apps environment + App Service plan
+- [ ] GitHub Actions CI/CD: build, push container image, deploy to Azure Container Apps
+
+### Active (future)
+
 - [ ] skills-guru integration: full integration as a first-class backend — push/sync TO and query/search FROM QdrantSkillsMCP
 
 ### Out of Scope
@@ -66,7 +85,7 @@ Agents can semantically search and retrieve the right skills at the right time �
 - **Test Framework**: XUnit v3 with MTP (Microsoft Testing Platform) runner
 - **Aspire Version**: v13.2 for AppHost and testing infrastructure
 - **Package Distribution**: NuGet tool package, invoked via `dnx QdrantSkillsMCP`
-- **MCP Transport**: stdio as primary transport (standard for local MCP servers)
+- **MCP Transport**: stdio as default transport; HTTP/SSE and Streamable HTTP added in v1.1 for shared server scenarios
 - **Skill Schema**: Must preserve full Claude Code skill format (frontmatter + markdown body) — no lossy transformations
 
 ## Key Decisions
@@ -91,5 +110,22 @@ Agents can semantically search and retrieve the right skills at the right time �
 | ConfigManager uses reflection for configurable keys | Avoids manual key enum maintenance | ✓ Good — automatically tracks new options |
 | Source precedence via annotation tracking | Shows users where each value came from | ✓ Good — UX clarity |
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd:transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd:complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-03-30 after v1.0 milestone*
+*Last updated: 2026-03-31 — v1.1 Shared Server milestone started*

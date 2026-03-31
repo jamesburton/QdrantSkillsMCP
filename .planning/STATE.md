@@ -1,43 +1,44 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: MVP
-status: complete
-stopped_at: Milestone v1.0 complete — all 4 phases shipped
-last_updated: "2026-03-30T10:55:00Z"
-last_activity: 2026-03-30 -- v1.0 milestone archived
+milestone: v1.1
+milestone_name: Shared Server
+status: in_progress
+stopped_at: Milestone v1.1 started — defining requirements
+last_updated: "2026-03-31T10:07:00Z"
+last_activity: 2026-03-31 -- Milestone v1.1 Shared Server started
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-30)
+See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Agents can semantically search and retrieve the right skills at the right time
-**Current focus:** Planning next milestone — start with `/gsd:new-milestone`
+**Current focus:** Milestone v1.1 — Shared Server with Azure Entra auth + HTTP transports + cloud deployment
 
 ## Current Position
 
-Phase: 4 of 4 — COMPLETE
-Status: v1.0 milestone shipped 2026-03-30
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
-## Performance Metrics
+## Accumulated Context (from v1.0)
 
-**Velocity:**
+**Velocity (v1.0 baseline):**
 - Total plans completed: 14
 - Average duration: 7min
 - Total execution time: ~1.6 hours
 
-**By Phase:**
+**By Phase (v1.0):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
@@ -48,6 +49,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-30
-Stopped at: v1.0 milestone complete
-Next step: `/gsd:new-milestone` for v1.1 planning
+Last session: 2026-03-31
+Stopped at: Milestone v1.1 started, proceeding to requirements definition
+Next step: Define requirements and create roadmap
