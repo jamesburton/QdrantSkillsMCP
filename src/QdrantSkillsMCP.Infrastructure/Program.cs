@@ -36,6 +36,7 @@ else if (args.Contains("--console"))
     builder.Logging.ClearProviders().AddConsole();
     UserConfigLoader.AddUserConfig(builder.Configuration);
     builder.Configuration.AddJsonFile("qdrant-skills.json", optional: true, reloadOnChange: false);
+    ApplyQdrantProtocolFlags(builder, args);
     builder.Services.AddQdrantSkillsInfrastructure(builder.Configuration);
 
     var host = builder.Build();
@@ -123,6 +124,7 @@ else
 
     UserConfigLoader.AddUserConfig(builder.Configuration);
     builder.Configuration.AddJsonFile("qdrant-skills.json", optional: true, reloadOnChange: false);
+    ApplyQdrantProtocolFlags(builder, args);
     builder.Services.AddQdrantSkillsInfrastructure(builder.Configuration);
 
     // MCP server with stdio transport -- tools auto-discovered from this assembly
@@ -132,4 +134,21 @@ else
         .WithToolsFromAssembly();
 
     await builder.Build().RunAsync();
+}
+
+// --- Shared helpers ---
+
+/// <summary>
+/// Applies --qdrant-grpc / --qdrant-http CLI flags to configuration.
+/// </summary>
+static void ApplyQdrantProtocolFlags(HostApplicationBuilder builder, string[] args)
+{
+    if (args.Contains("--qdrant-grpc"))
+    {
+        builder.Configuration["QdrantSkills:QdrantProtocol"] = "grpc";
+    }
+    else if (args.Contains("--qdrant-http"))
+    {
+        builder.Configuration["QdrantSkills:QdrantProtocol"] = "http";
+    }
 }

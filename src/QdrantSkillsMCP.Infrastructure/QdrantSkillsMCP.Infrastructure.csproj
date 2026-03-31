@@ -36,6 +36,7 @@
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.2.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.*" />
     <PackageReference Include="OllamaSharp" Version="5.4.25" />
+    <PackageReference Include="Grpc.Net.Client.Web" Version="2.*" />
     <PackageReference Include="Qdrant.Client" Version="1.17.0" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.*" />
     <PackageReference Include="Spectre.Console" Version="0.54.0" />

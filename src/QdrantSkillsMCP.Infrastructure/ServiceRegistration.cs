@@ -65,15 +65,14 @@ public static class ServiceRegistration
         // Bind configuration
         services.Configure<QdrantSkillsOptions>(config.GetSection(QdrantSkillsOptions.SectionName));
 
-        // QdrantClient -- singleton, created from options
+        // QdrantClientFactory -- creates protocol-aware QdrantClient
+        services.AddSingleton<QdrantClientFactory>();
+
+        // QdrantClient -- singleton, created via factory
         services.AddSingleton(sp =>
         {
-            var options = sp.GetRequiredService<IOptions<QdrantSkillsOptions>>().Value;
-            return new QdrantClient(
-                options.QdrantHost,
-                options.QdrantGrpcPort,
-                https: options.UseTls,
-                apiKey: options.QdrantApiKey);
+            var factory = sp.GetRequiredService<QdrantClientFactory>();
+            return factory.Create();
         });
 
         // DimensionValidator -- IHostedService that validates embedding dimensions on startup
