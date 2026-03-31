@@ -26,15 +26,18 @@ RUN dotnet publish src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastruc
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+EXPOSE 8080
+
 # Copy published output
 COPY --from=build /app/publish .
 
 # Default environment — override at runtime via -e or docker-compose
 ENV ASPNETCORE_ENVIRONMENT=Production \
+    QDRANT_SKILLS_URL=http://+:8080 \
     QdrantSkills__QdrantHost=qdrant \
     QdrantSkills__QdrantGrpcPort=6334 \
     QdrantSkills__CollectionName=skills \
     QdrantSkills__EmbeddingProvider=openai
 
-# MCP server uses stdio transport — no ports needed
-ENTRYPOINT ["dotnet", "QdrantSkillsMCP.Infrastructure.dll"]
+# Default to HTTP in container; override with: docker run <image> --stdio
+ENTRYPOINT ["dotnet", "QdrantSkillsMCP.Infrastructure.dll", "--http"]
