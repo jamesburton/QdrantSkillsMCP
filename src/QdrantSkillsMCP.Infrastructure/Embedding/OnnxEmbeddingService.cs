@@ -1,6 +1,5 @@
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Options;
-using QdrantSkillsMCP.Core.Interfaces;
 using QdrantSkillsMCP.Infrastructure.Configuration;
 
 namespace QdrantSkillsMCP.Infrastructure.Embedding;
@@ -9,24 +8,18 @@ namespace QdrantSkillsMCP.Infrastructure.Embedding;
 /// Generates text embeddings using a local ONNX model (all-MiniLM-L6-v2)
 /// via the SemanticKernel BertOnnxTextEmbeddingGenerationService bridge.
 /// </summary>
-public sealed class OnnxEmbeddingService : IEmbeddingService
+public sealed class OnnxEmbeddingService(
+    IEmbeddingGenerator<string, Embedding<float>> generator,
+    IOptions<QdrantSkillsOptions> options)
+    : GeneratorEmbeddingServiceBase(generator)
 {
-    private readonly IEmbeddingGenerator<string, Embedding<float>> _generator;
-    private readonly QdrantSkillsOptions _options;
+    private readonly QdrantSkillsOptions _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
     /// <summary>Default dimensions for all-MiniLM-L6-v2.</summary>
     public const int DefaultOnnxDimensions = 384;
 
-    public OnnxEmbeddingService(
-        IEmbeddingGenerator<string, Embedding<float>> generator,
-        IOptions<QdrantSkillsOptions> options)
-    {
-        _generator = generator ?? throw new ArgumentNullException(nameof(generator));
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-    }
-
     /// <inheritdoc />
-    public int Dimensions
+    public override int Dimensions
     {
         get
         {
@@ -38,14 +31,5 @@ public sealed class OnnxEmbeddingService : IEmbeddingService
                 return configured;
             return modelDims;
         }
-    }
-
-    /// <inheritdoc />
-    public async Task<float[]> GenerateEmbeddingAsync(string text, CancellationToken ct)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(text);
-
-        var result = await _generator.GenerateAsync([text], cancellationToken: ct);
-        return result[0].Vector.ToArray();
     }
 }
