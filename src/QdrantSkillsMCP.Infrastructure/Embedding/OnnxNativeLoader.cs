@@ -12,7 +12,7 @@ namespace QdrantSkillsMCP.Infrastructure.Embedding;
 /// </summary>
 internal static class OnnxNativeLoader
 {
-    private static bool _installed;
+    private static volatile bool _installed;
     private static readonly object _lock = new();
     private static string? _resolvedPath;
 
@@ -23,57 +23,58 @@ internal static class OnnxNativeLoader
     /// </summary>
     public static void EnsureLoaded(ILogger logger)
     {
+        if (_installed) return; // fast path without lock
+
         lock (_lock)
         {
-            if (_installed) return;
-            _installed = true;
-        }
-
-        NativeLibrary.SetDllImportResolver(
-            typeof(Microsoft.ML.OnnxRuntime.InferenceSession).Assembly,
-            (libraryName, _, _) =>
-            {
-                // OnnxRuntime uses "onnxruntime" as the DllImport name on all platforms.
-                if (!libraryName.Equals("onnxruntime", StringComparison.OrdinalIgnoreCase))
-                    return IntPtr.Zero;
-
-                // Already resolved in this process — return the same handle.
-                if (_resolvedPath is not null && NativeLibrary.TryLoad(_resolvedPath, out var cached))
-                    return cached;
-
-                // System-level install (e.g. user has Microsoft.ML.OnnxRuntime installed globally).
-                if (NativeLibrary.TryLoad(libraryName, out var system))
-                    return system;
-
-                // Our local download cache.
-                var cachePath = GetCachePath();
-                if (File.Exists(cachePath) && NativeLibrary.TryLoad(cachePath, out var fromCache))
+            if (_installed) return; // double-check inside lock
+            NativeLibrary.SetDllImportResolver(
+                typeof(Microsoft.ML.OnnxRuntime.InferenceSession).Assembly,
+                (libraryName, _, _) =>
                 {
-                    _resolvedPath = cachePath;
-                    return fromCache;
-                }
+                    // OnnxRuntime uses "onnxruntime" as the DllImport name on all platforms.
+                    if (!libraryName.Equals("onnxruntime", StringComparison.OrdinalIgnoreCase))
+                        return IntPtr.Zero;
 
-                // Download from NuGet, then load.
-                try
-                {
-                    Task.Run(() => DownloadAsync(logger, cachePath)).GetAwaiter().GetResult();
+                    // Already resolved in this process — return the same handle.
+                    if (_resolvedPath is not null && NativeLibrary.TryLoad(_resolvedPath, out var cached))
+                        return cached;
 
-                    if (File.Exists(cachePath) && NativeLibrary.TryLoad(cachePath, out var downloaded))
+                    // System-level install (e.g. user has Microsoft.ML.OnnxRuntime installed globally).
+                    if (NativeLibrary.TryLoad(libraryName, out var system))
+                        return system;
+
+                    // Our local download cache.
+                    var cachePath = GetCachePath();
+                    if (File.Exists(cachePath) && NativeLibrary.TryLoad(cachePath, out var fromCache))
                     {
                         _resolvedPath = cachePath;
-                        return downloaded;
+                        return fromCache;
                     }
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex,
-                        "Failed to download ONNX native runtime. " +
-                        "Set EmbeddingProvider=OpenAI or EmbeddingProvider=Ollama to avoid ONNX: " +
-                        "qdrant-skills-mcp --config set EmbeddingProvider=OpenAI");
-                }
 
-                return IntPtr.Zero;
-            });
+                    // Download from NuGet, then load.
+                    try
+                    {
+                        Task.Run(() => DownloadAsync(logger, cachePath)).GetAwaiter().GetResult();
+
+                        if (File.Exists(cachePath) && NativeLibrary.TryLoad(cachePath, out var downloaded))
+                        {
+                            _resolvedPath = cachePath;
+                            return downloaded;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex,
+                            "Failed to download ONNX native runtime. " +
+                            "Set EmbeddingProvider=OpenAI or EmbeddingProvider=Ollama to avoid ONNX: " +
+                            "qdrant-skills-mcp --config set EmbeddingProvider=OpenAI");
+                    }
+
+                    return IntPtr.Zero;
+                });
+            _installed = true; // set AFTER registration succeeds
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

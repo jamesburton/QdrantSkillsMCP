@@ -42,21 +42,12 @@ public sealed class DimensionValidator : IHostedService
         }
         catch (Exception ex) when (ex is Grpc.Core.RpcException or HttpRequestException)
         {
-            var detail = ex is Grpc.Core.RpcException rpc
-                ? $"{rpc.Status.StatusCode}: {rpc.Status.Detail}"
-                : $"{ex.GetType().Name}: {ex.Message}";
-            Console.Error.WriteLine(
-                $"[DimensionValidator] Qdrant unreachable at startup — dimension validation skipped. " +
-                $"Skills will not be available until Qdrant is reachable. ({detail})");
             _logger.LogWarning(ex,
                 "Qdrant unreachable at startup — dimension validation skipped. " +
                 "Skills will not be available until Qdrant is reachable.");
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            Console.Error.WriteLine(
-                $"[DimensionValidator] Qdrant unreachable at startup — dimension validation skipped. " +
-                $"Skills will not be available until Qdrant is reachable. ({ex.GetType().Name}: {ex.Message})");
             _logger.LogWarning(ex,
                 "Qdrant unreachable at startup — dimension validation skipped. " +
                 "Skills will not be available until Qdrant is reachable.");
