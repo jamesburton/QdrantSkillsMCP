@@ -1,5 +1,4 @@
 using System.ClientModel;
-using System.Runtime.InteropServices;
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
@@ -200,17 +199,9 @@ public static class ServiceRegistration
                     "qdrant-skills-mcp --config set EmbeddingProvider=OpenAI");
             }
 
-            // Probe for the native ONNX runtime before calling into it.
-            // An AV inside native code is uncatchable; this check gives a readable error instead.
-            var nativeLibName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "onnxruntime"
-                : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "libonnxruntime.so"
-                : "libonnxruntime.dylib";
-
-            if (!NativeLibrary.TryLoad(nativeLibName, out _))
-            {
-                logger.LogError(OnnxNativesNotFoundMessage);
-                throw new InvalidOperationException(OnnxNativesNotFoundMessage);
-            }
+            // Install the DllImportResolver that downloads the ONNX native from NuGet on demand.
+            // Must run before any OnnxRuntime managed types are instantiated.
+            OnnxNativeLoader.EnsureLoaded(logger);
 
             try
             {
