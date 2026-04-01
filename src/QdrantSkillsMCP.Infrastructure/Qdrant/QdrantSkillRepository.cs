@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-using System.Text;
+using Google.Protobuf.Collections;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Qdrant.Client.Grpc;
@@ -22,6 +21,22 @@ public sealed class QdrantSkillRepository : ISkillRepository
     private readonly SkillParser _parser;
     private readonly ILogger<QdrantSkillRepository> _logger;
 
+    // REP-04: shared filter — reused by SearchAsync and ListAsync
+    private static readonly Filter _activeSkillsFilter = new()
+    {
+        Must =
+        {
+            new Condition
+            {
+                Field = new FieldCondition
+                {
+                    Key = "archived",
+                    Match = new Match { Boolean = false }
+                }
+            }
+        }
+    };
+
     public QdrantSkillRepository(
         IQdrantOperations client,
         IOptions<QdrantSkillsOptions> options,
@@ -40,11 +55,7 @@ public sealed class QdrantSkillRepository : ISkillRepository
     /// Generates a deterministic Qdrant point ID from a skill name.
     /// SHA-256 hash of UTF-8 bytes, first 16 bytes converted to a <see cref="Guid"/>.
     /// </summary>
-    public static Guid GeneratePointId(string skillName)
-    {
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(skillName));
-        return new Guid(hash.AsSpan(0, 16));
-    }
+    public static Guid GeneratePointId(string skillName) => QdrantPointIdHelper.FromString(skillName);
 
     /// <inheritdoc />
     public async Task AddAsync(Skill skill, float[] embedding, bool overwrite, CancellationToken ct)
@@ -55,9 +66,11 @@ public sealed class QdrantSkillRepository : ISkillRepository
 
         if (!overwrite)
         {
+            // BUG-01: withPayload: false — we only need the count, not the payload
             var existing = await _client.RetrieveAsync(
                 _options.CollectionName,
                 pointId,
+                withPayload: false,
                 cancellationToken: ct);
 
             if (existing.Count > 0)
@@ -80,10 +93,11 @@ public sealed class QdrantSkillRepository : ISkillRepository
 
         var pointId = GeneratePointId(skill.Name);
 
-        // Verify skill exists
+        // Verify skill exists — BUG-01: withPayload: false, we only need the count
         var existing = await _client.RetrieveAsync(
             _options.CollectionName,
             pointId,
+            withPayload: false,
             cancellationToken: ct);
 
         if (existing.Count == 0)
@@ -153,40 +167,23 @@ public sealed class QdrantSkillRepository : ISkillRepository
     {
         await EnsureCollectionAsync(ct);
 
-        // Filter: exclude archived skills
-        var filter = new Filter
-        {
-            Must =
-            {
-                new Condition
-                {
-                    Field = new FieldCondition
-                    {
-                        Key = "archived",
-                        Match = new Match { Boolean = false }
-                    }
-                }
-            }
-        };
-
         var searchResults = await _client.SearchAsync(
             _options.CollectionName,
             queryEmbedding,
-            filter: filter,
+            filter: _activeSkillsFilter,
             limit: (ulong)maxResults,
             scoreThreshold: scoreThreshold,
             cancellationToken: ct);
 
-        // Results come from Qdrant ordered by score descending.
-        // Apply recency tiebreaker for equal scores.
+        // OPT-02: Qdrant returns results ordered by score descending already.
+        // Stable sort on recency as a tiebreaker without re-sorting by score.
         var results = searchResults
             .Select(r => new
             {
                 Skill = PointToSkill(r),
                 r.Score
             })
-            .OrderByDescending(r => r.Score)
-            .ThenByDescending(r => r.Skill.UpdatedAt)
+            .OrderByDescending(r => r.Skill.UpdatedAt)
             .Select(r => new SearchResult
             {
                 Skill = r.Skill,
@@ -202,25 +199,9 @@ public sealed class QdrantSkillRepository : ISkillRepository
     {
         await EnsureCollectionAsync(ct);
 
-        // Filter: exclude archived skills
-        var filter = new Filter
-        {
-            Must =
-            {
-                new Condition
-                {
-                    Field = new FieldCondition
-                    {
-                        Key = "archived",
-                        Match = new Match { Boolean = false }
-                    }
-                }
-            }
-        };
-
         var scrollResponse = await _client.ScrollAsync(
             _options.CollectionName,
-            filter: filter,
+            filter: _activeSkillsFilter,
             cancellationToken: ct);
 
         var metadata = new List<SkillMetadata>();
@@ -229,15 +210,11 @@ public sealed class QdrantSkillRepository : ISkillRepository
             var payload = point.Payload;
             metadata.Add(new SkillMetadata
             {
-                Name = payload.TryGetValue("name", out var nameVal) ? nameVal.StringValue : string.Empty,
-                Description = payload.TryGetValue("description", out var descVal) ? descVal.StringValue : null,
-                Tags = payload.TryGetValue("tags", out var tagsVal)
-                    ? tagsVal.ListValue.Values.Select(v => v.StringValue).ToArray()
-                    : null,
+                Name = payload.GetString("name"),
+                Description = payload.GetString("description") is { Length: > 0 } d ? d : null,
+                Tags = payload.GetStringList("tags"),
                 Score = 0,
-                UpdatedAt = payload.TryGetValue("updated_at", out var updVal)
-                    ? DateTimeOffset.Parse(updVal.StringValue)
-                    : DateTimeOffset.MinValue
+                UpdatedAt = payload.GetDateTimeOffset("updated_at")
             });
         }
 
@@ -274,58 +251,28 @@ public sealed class QdrantSkillRepository : ISkillRepository
         };
     }
 
-    /// <summary>
-    /// Reconstructs a <see cref="Skill"/> from a Qdrant point's payload.
-    /// Returns <see cref="Skill.RawContent"/> as-is for lossless round-trip.
-    /// </summary>
-    private Skill PointToSkill(RetrievedPoint point)
-    {
-        var payload = point.Payload;
+    // REP-02: thin overloads delegate to shared helper
+    private Skill PointToSkill(RetrievedPoint p) => SkillFromPayload(p.Payload);
+    private Skill PointToSkill(ScoredPoint p)    => SkillFromPayload(p.Payload);
 
-        var rawContent = payload.TryGetValue("raw_content", out var rawVal) ? rawVal.StringValue : string.Empty;
+    /// <summary>
+    /// REP-02 / REP-03 / BUG-04: shared payload → Skill reconstruction.
+    /// Uses extension methods to guard against null ListValue and bad date strings.
+    /// </summary>
+    private Skill SkillFromPayload(MapField<string, Value> payload)
+    {
+        var rawContent = payload.GetString("raw_content");
         var (_, markdownBody, _) = _parser.Parse(rawContent);
 
         return new Skill
         {
-            Name = payload.TryGetValue("name", out var nameVal) ? nameVal.StringValue : string.Empty,
-            Description = payload.TryGetValue("description", out var descVal) && !string.IsNullOrEmpty(descVal.StringValue)
-                ? descVal.StringValue : null,
-            Tags = payload.TryGetValue("tags", out var tagsVal)
-                ? tagsVal.ListValue.Values.Select(v => v.StringValue).ToArray()
-                : null,
-            RawContent = rawContent,
+            Name        = payload.GetString("name"),
+            Description = payload.GetString("description") is { Length: > 0 } d ? d : null,
+            Tags        = payload.GetStringList("tags"),
+            RawContent  = rawContent,
             MarkdownBody = markdownBody,
-            UpdatedAt = payload.TryGetValue("updated_at", out var updVal)
-                ? DateTimeOffset.Parse(updVal.StringValue)
-                : DateTimeOffset.MinValue,
-            Archived = payload.TryGetValue("archived", out var archVal) && archVal.BoolValue
-        };
-    }
-
-    /// <summary>
-    /// Reconstructs a <see cref="Skill"/> from a Qdrant search result's payload.
-    /// </summary>
-    private Skill PointToSkill(ScoredPoint point)
-    {
-        var payload = point.Payload;
-
-        var rawContent = payload.TryGetValue("raw_content", out var rawVal) ? rawVal.StringValue : string.Empty;
-        var (_, markdownBody, _) = _parser.Parse(rawContent);
-
-        return new Skill
-        {
-            Name = payload.TryGetValue("name", out var nameVal) ? nameVal.StringValue : string.Empty,
-            Description = payload.TryGetValue("description", out var descVal) && !string.IsNullOrEmpty(descVal.StringValue)
-                ? descVal.StringValue : null,
-            Tags = payload.TryGetValue("tags", out var tagsVal)
-                ? tagsVal.ListValue.Values.Select(v => v.StringValue).ToArray()
-                : null,
-            RawContent = rawContent,
-            MarkdownBody = markdownBody,
-            UpdatedAt = payload.TryGetValue("updated_at", out var updVal)
-                ? DateTimeOffset.Parse(updVal.StringValue)
-                : DateTimeOffset.MinValue,
-            Archived = payload.TryGetValue("archived", out var archVal) && archVal.BoolValue
+            UpdatedAt   = payload.GetDateTimeOffset("updated_at"),
+            Archived    = payload.GetBool("archived")
         };
     }
 }
