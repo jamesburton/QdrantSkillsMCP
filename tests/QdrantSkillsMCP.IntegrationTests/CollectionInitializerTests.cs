@@ -45,7 +45,7 @@ public sealed class CollectionInitializerTests : IAsyncLifetime
         // Arrange
         var options = CreateOptions();
         using var initializer = new CollectionInitializer(
-            _fixture.QdrantClient, Options.Create(options));
+            _fixture.QdrantOperations, Options.Create(options));
 
         // Act
         await initializer.EnsureCollectionAsync(CancellationToken.None);
@@ -67,7 +67,7 @@ public sealed class CollectionInitializerTests : IAsyncLifetime
         // Arrange
         var options = CreateOptions();
         using var initializer = new CollectionInitializer(
-            _fixture.QdrantClient, Options.Create(options));
+            _fixture.QdrantOperations, Options.Create(options));
 
         // Act -- call twice, no error on second call
         await initializer.EnsureCollectionAsync(CancellationToken.None);
@@ -84,7 +84,7 @@ public sealed class CollectionInitializerTests : IAsyncLifetime
         // Arrange
         var options = CreateOptions();
         using var initializer = new CollectionInitializer(
-            _fixture.QdrantClient, Options.Create(options));
+            _fixture.QdrantOperations, Options.Create(options));
 
         // Act
         await initializer.EnsureCollectionAsync(CancellationToken.None);

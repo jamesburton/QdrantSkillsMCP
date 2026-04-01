@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Qdrant.Client;
 using QdrantSkillsMCP.Infrastructure.Configuration;
+using QdrantSkillsMCP.Infrastructure.Qdrant;
 using Xunit;
 
 namespace QdrantSkillsMCP.IntegrationTests.Fixtures;
@@ -20,6 +21,9 @@ public sealed class QdrantFixture : IAsyncLifetime
 
     /// <summary>Qdrant client connected to the Aspire-managed container.</summary>
     public QdrantClient QdrantClient { get; private set; } = null!;
+
+    /// <summary>IQdrantOperations wrapping QdrantClient for use with infrastructure types.</summary>
+    public IQdrantOperations QdrantOperations { get; private set; } = null!;
 
     /// <summary>Unique collection name for this test run.</summary>
     public string CollectionName { get; } = $"skills-test-{Guid.NewGuid():N}";
@@ -57,6 +61,7 @@ public sealed class QdrantFixture : IAsyncLifetime
         var (host, grpcPort) = ParseConnectionString(connectionString);
 
         QdrantClient = new QdrantClient(host, grpcPort);
+        QdrantOperations = new GrpcQdrantOperations(QdrantClient);
 
         Options = new QdrantSkillsOptions
         {

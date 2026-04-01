@@ -44,10 +44,10 @@ public sealed class SessionIdIntegrationTests : IAsyncLifetime
         };
 
         var collectionInitializer = new CollectionInitializer(
-            fixture.QdrantClient, Options.Create(options));
+            fixture.QdrantOperations, Options.Create(options));
 
         _repository = new QdrantSkillRepository(
-            fixture.QdrantClient,
+            fixture.QdrantOperations,
             Options.Create(options),
             collectionInitializer,
             new SkillParser(),
