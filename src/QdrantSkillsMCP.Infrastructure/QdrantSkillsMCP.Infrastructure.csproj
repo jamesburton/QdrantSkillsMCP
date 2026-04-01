@@ -62,5 +62,16 @@
     <EmbeddedResource Include="SkillGuide\EnableSkillSearch.md" />
   </ItemGroup>
 
+  <!-- Strip ONNX native runtimes from publish output before pack.
+       SK Connectors Onnx pulls in Microsoft.ML.OnnxRuntime (natives) transitively.
+       OnnxNativeLoader downloads them on demand instead, keeping the package ~8MB. -->
+  <Target Name="RemoveOnnxNativesFromPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_OnnxNatives Include="$(PublishDir)runtimes\**\*onnxruntime*" />
+      <_OnnxNatives Include="$(PublishDir)runtimes/**/*onnxruntime*" />
+    </ItemGroup>
+    <Delete Files="@(_OnnxNatives)" />
+    <RemoveDir Directories="$(PublishDir)runtimes" Condition="Exists('$(PublishDir)runtimes')" />
+  </Target>
 
 </Project>
