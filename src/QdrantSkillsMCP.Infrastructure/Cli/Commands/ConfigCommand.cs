@@ -188,51 +188,73 @@ public static class ConfigCommand
     {
         var entries = configManager.GetAllWithSources();
         var host = entries.GetValueOrDefault("QdrantHost")?.Value ?? "localhost";
-        var portStr = entries.GetValueOrDefault("QdrantGrpcPort")?.Value ?? "6334";
         var collection = entries.GetValueOrDefault("CollectionName")?.Value ?? "skills";
         var apiKey = entries.GetValueOrDefault("QdrantApiKey")?.Value;
+        var protocol = entries.GetValueOrDefault("QdrantProtocol")?.Value?.ToLowerInvariant();
         var useTlsStr = entries.GetValueOrDefault("UseTls")?.Value;
-        var useTls = string.Equals(useTlsStr, "true", StringComparison.OrdinalIgnoreCase)
-                  || string.Equals(useTlsStr, "True", StringComparison.OrdinalIgnoreCase);
-
-        if (!int.TryParse(portStr, out var port))
-            port = 6334;
+        var useTls = string.Equals(useTlsStr, "true", StringComparison.OrdinalIgnoreCase);
 
         var isLocalhost = host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-            || host == "127.0.0.1"
-            || host == "::1";
+            || host == "127.0.0.1" || host == "::1";
 
-        // Auto-enable TLS for remote hosts unless explicitly set
         if (!isLocalhost && !useTls && useTlsStr is null)
         {
             useTls = true;
             Console.WriteLine("INFO: Remote host detected — auto-enabling TLS. Set UseTls=false to override.");
         }
 
-        Console.WriteLine($"Resolved config: host={host}, port={port}, collection={collection}, tls={useTls}");
-
+        var useRest = protocol is "http" or "rest";
         var allPassed = true;
 
-        // Test Qdrant connection
-        Console.Write("Qdrant connection... ");
-        try
+        if (useRest)
         {
-            var client = new QdrantClient(host, port, https: useTls, apiKey: apiKey);
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            await client.ListCollectionsAsync(cts.Token);
-            Console.WriteLine("PASS");
+            var restPortStr = entries.GetValueOrDefault("QdrantRestPort")?.Value ?? "6333";
+            if (!int.TryParse(restPortStr, out var restPort))
+                restPort = useTls ? 443 : 6333;
+
+            Console.WriteLine($"Resolved config: host={host}, port={restPort}, collection={collection}, tls={useTls}, protocol=http");
+            Console.Write("Qdrant connection (REST)... ");
+            try
+            {
+                var scheme = useTls ? "https" : "http";
+                var httpClient = new HttpClient { BaseAddress = new Uri($"{scheme}://{host}:{restPort}") };
+                if (!string.IsNullOrEmpty(apiKey))
+                    httpClient.DefaultRequestHeaders.Add("api-key", apiKey);
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                var response = await httpClient.GetAsync("/collections", cts.Token);
+                response.EnsureSuccessStatusCode();
+                Console.WriteLine("PASS");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"FAIL ({ex.GetType().Name}: {ex.Message})");
+                allPassed = false;
+            }
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"FAIL ({ex.GetType().Name}: {ex.Message})");
+            var grpcPortStr = entries.GetValueOrDefault("QdrantGrpcPort")?.Value ?? "6334";
+            if (!int.TryParse(grpcPortStr, out var grpcPort))
+                grpcPort = 6334;
 
-            // Suggest TLS toggle if connection failed
-            if (!useTls && !isLocalhost)
-                Console.WriteLine("HINT: Try setting UseTls=true for remote hosts (--config set UseTls=true)");
-            else if (useTls && ex.Message.Contains("HTTP_1_1_REQUIRED", StringComparison.OrdinalIgnoreCase))
-                Console.WriteLine("HINT: Host requires HTTP/1.1 — gRPC over HTTP/2 may not be supported by this proxy. Try the Qdrant REST port instead.");
-
-            allPassed = false;
+            Console.WriteLine($"Resolved config: host={host}, port={grpcPort}, collection={collection}, tls={useTls}, protocol=grpc");
+            Console.Write("Qdrant connection (gRPC)... ");
+            try
+            {
+                var client = new QdrantClient(host, grpcPort, https: useTls, apiKey: apiKey);
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                await client.ListCollectionsAsync(cts.Token);
+                Console.WriteLine("PASS");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"FAIL ({ex.GetType().Name}: {ex.Message})");
+                if (!useTls && !isLocalhost)
+                    Console.WriteLine("HINT: Try setting UseTls=true for remote hosts.");
+                else if (ex.Message.Contains("HTTP_1_1_REQUIRED", StringComparison.OrdinalIgnoreCase))
+                    Console.WriteLine("HINT: Host does not support gRPC/HTTP2. Try: --config set QdrantProtocol=http");
+                allPassed = false;
+            }
         }
 
         return allPassed ? 0 : 1;
