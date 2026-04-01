@@ -139,7 +139,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
     {
         var url = $"/collections/{Uri.EscapeDataString(collectionName)}";
         var response = await _httpClient.DeleteAsync(url, cancellationToken);
-        await EnsureSuccessAsync(response, "DELETE", url);
+        await EnsureSuccessAsync(response, "DELETE", url, cancellationToken);
     }
 
     public async Task CreatePayloadIndexAsync(string collectionName, string fieldName, PayloadSchemaType schemaType, CancellationToken cancellationToken)
@@ -164,7 +164,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
 
         var url = $"/collections/{Uri.EscapeDataString(collectionName)}/index";
         var response = await _httpClient.PutAsync(url, JsonContent.Create(body, options: JsonOptions), cancellationToken);
-        await EnsureSuccessAsync(response, "PUT", url);
+        await EnsureSuccessAsync(response, "PUT", url, cancellationToken);
     }
 
     // --- Point operations ---
@@ -180,7 +180,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
         var body = new JsonObject { ["points"] = jsonPoints };
         var url = $"/collections/{Uri.EscapeDataString(collectionName)}/points";
         var response = await _httpClient.PutAsync(url, JsonContent.Create(body, options: JsonOptions), cancellationToken);
-        await EnsureSuccessAsync(response, "PUT", url);
+        await EnsureSuccessAsync(response, "PUT", url, cancellationToken);
     }
 
     public async Task<IReadOnlyList<RetrievedPoint>> RetrieveAsync(string collectionName, Guid id, bool withPayload, CancellationToken cancellationToken)
@@ -194,7 +194,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
 
         var url = $"/collections/{Uri.EscapeDataString(collectionName)}/points";
         var response = await _httpClient.PostAsync(url, JsonContent.Create(body, options: JsonOptions), cancellationToken);
-        await EnsureSuccessAsync(response, "POST", url);
+        await EnsureSuccessAsync(response, "POST", url, cancellationToken);
 
         var json = await response.Content.ReadFromJsonAsync<JsonNode>(JsonOptions, cancellationToken);
         var resultArray = json?["result"]?.AsArray();
@@ -216,7 +216,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
 
         var url = $"/collections/{Uri.EscapeDataString(collectionName)}/points/delete";
         var response = await _httpClient.PostAsync(url, JsonContent.Create(body, options: JsonOptions), cancellationToken);
-        await EnsureSuccessAsync(response, "POST", url);
+        await EnsureSuccessAsync(response, "POST", url, cancellationToken);
     }
 
     public async Task SetPayloadAsync(string collectionName, IDictionary<string, Value> payload, Guid id, CancellationToken cancellationToken)
@@ -235,7 +235,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
 
         var url = $"/collections/{Uri.EscapeDataString(collectionName)}/points/payload";
         var response = await _httpClient.PostAsync(url, JsonContent.Create(body, options: JsonOptions), cancellationToken);
-        await EnsureSuccessAsync(response, "POST", url);
+        await EnsureSuccessAsync(response, "POST", url, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ScoredPoint>> SearchAsync(
@@ -243,7 +243,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
     {
         var body = new JsonObject
         {
-            ["vector"] = new JsonArray(queryVector.Select(v => (JsonNode)JsonValue.Create(v)).ToArray()),
+            ["vector"] = JsonSerializer.SerializeToNode(queryVector),
             ["limit"] = (long)limit,
             ["with_payload"] = true
         };
@@ -256,7 +256,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
 
         var url = $"/collections/{Uri.EscapeDataString(collectionName)}/points/search";
         var response = await _httpClient.PostAsync(url, JsonContent.Create(body, options: JsonOptions), cancellationToken);
-        await EnsureSuccessAsync(response, "POST", url);
+        await EnsureSuccessAsync(response, "POST", url, cancellationToken);
 
         var json = await response.Content.ReadFromJsonAsync<JsonNode>(JsonOptions, cancellationToken);
         var resultArray = json?["result"]?.AsArray();
@@ -269,12 +269,12 @@ public sealed class RestQdrantOperations : IQdrantOperations
             .AsReadOnly();
     }
 
-    public async Task<ScrollResponse> ScrollAsync(string collectionName, Filter? filter, CancellationToken cancellationToken)
+    public async Task<ScrollResponse> ScrollAsync(string collectionName, Filter? filter = null, CancellationToken cancellationToken = default, uint limit = 250)
     {
         var body = new JsonObject
         {
             ["with_payload"] = true,
-            ["limit"] = 100
+            ["limit"] = limit
         };
 
         if (filter is not null)
@@ -282,7 +282,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
 
         var url = $"/collections/{Uri.EscapeDataString(collectionName)}/points/scroll";
         var response = await _httpClient.PostAsync(url, JsonContent.Create(body, options: JsonOptions), cancellationToken);
-        await EnsureSuccessAsync(response, "POST", url);
+        await EnsureSuccessAsync(response, "POST", url, cancellationToken);
 
         var json = await response.Content.ReadFromJsonAsync<JsonNode>(JsonOptions, cancellationToken);
         var resultNode = json?["result"];
@@ -306,21 +306,21 @@ public sealed class RestQdrantOperations : IQdrantOperations
     private async Task<JsonNode?> GetJsonAsync(string url, CancellationToken cancellationToken)
     {
         var response = await _httpClient.GetAsync(url, cancellationToken);
-        await EnsureSuccessAsync(response, "GET", url);
+        await EnsureSuccessAsync(response, "GET", url, cancellationToken);
         return await response.Content.ReadFromJsonAsync<JsonNode>(JsonOptions, cancellationToken);
     }
 
     private async Task PutJsonAsync(string url, JsonNode body, CancellationToken cancellationToken)
     {
         var response = await _httpClient.PutAsync(url, JsonContent.Create(body, options: JsonOptions), cancellationToken);
-        await EnsureSuccessAsync(response, "PUT", url);
+        await EnsureSuccessAsync(response, "PUT", url, cancellationToken);
     }
 
-    private async Task EnsureSuccessAsync(HttpResponseMessage response, string method, string url)
+    private async Task EnsureSuccessAsync(HttpResponseMessage response, string method, string url, CancellationToken cancellationToken = default)
     {
         if (!response.IsSuccessStatusCode)
         {
-            var body = await response.Content.ReadAsStringAsync();
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
             _logger.LogError("Qdrant REST {Method} {Url} failed with {StatusCode}: {Body}",
                 method, url, (int)response.StatusCode, body);
             throw new HttpRequestException(
@@ -353,8 +353,7 @@ public sealed class RestQdrantOperations : IQdrantOperations
         if (point.Vectors is not null && point.Vectors.VectorsOptionsCase == Vectors.VectorsOptionsOneofCase.Vector)
         {
 #pragma warning disable CS0612 // Vector.Data is obsolete but still functional in this Qdrant.Client version
-            obj["vector"] = new JsonArray(
-                point.Vectors.Vector.Data.Select(v => (JsonNode)JsonValue.Create(v)).ToArray());
+            obj["vector"] = JsonSerializer.SerializeToNode(point.Vectors.Vector.Data);
 #pragma warning restore CS0612
         }
 

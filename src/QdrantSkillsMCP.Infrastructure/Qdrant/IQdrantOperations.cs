@@ -50,5 +50,5 @@ public interface IQdrantOperations
         CancellationToken cancellationToken = default);
 
     /// <summary>Scrolls points in a collection with optional filter.</summary>
-    Task<ScrollResponse> ScrollAsync(string collectionName, Filter? filter = null, CancellationToken cancellationToken = default);
+    Task<ScrollResponse> ScrollAsync(string collectionName, Filter? filter = null, CancellationToken cancellationToken = default, uint limit = 250);
 }

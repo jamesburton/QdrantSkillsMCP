@@ -71,8 +71,8 @@ public sealed class GrpcQdrantOperations : IQdrantOperations
         return await _client.SearchAsync(collectionName, queryVector, filter: filter, limit: limit, scoreThreshold: scoreThreshold, cancellationToken: cancellationToken);
     }
 
-    public async Task<ScrollResponse> ScrollAsync(string collectionName, Filter? filter, CancellationToken cancellationToken)
+    public async Task<ScrollResponse> ScrollAsync(string collectionName, Filter? filter, CancellationToken cancellationToken, uint limit = 250)
     {
-        return await _client.ScrollAsync(collectionName, filter: filter, cancellationToken: cancellationToken);
+        return await _client.ScrollAsync(collectionName, filter: filter, limit: limit, cancellationToken: cancellationToken);
     }
 }
