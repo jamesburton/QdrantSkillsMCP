@@ -215,7 +215,7 @@ public sealed class SetupWizardTests : IDisposable
         Assert.Equal("qdrant-skills-mcp", capturedEntry!.ServerName);
         Assert.Equal("dnx", capturedEntry.Command);
         Assert.Single(capturedEntry.Args);
-        Assert.Equal("qdrant-skills-mcp", capturedEntry.Args[0]);
+        Assert.Equal("QdrantSkillsMCP", capturedEntry.Args[0]);
     }
 
     #endregion

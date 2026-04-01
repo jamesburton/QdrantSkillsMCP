@@ -32,8 +32,9 @@ if (args.Contains("--config"))
 else if (args.Contains("--console"))
 {
     // CLI mode: stdout is safe for output (no MCP transport)
-    var builder = Host.CreateApplicationBuilder(args);
-    builder.Logging.ClearProviders().AddConsole();
+    var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings { Args = args });
+    builder.Configuration.AddEnvironmentVariables();
+    builder.Logging.AddConsole();
     UserConfigLoader.AddUserConfig(builder.Configuration);
     builder.Configuration.AddJsonFile("qdrant-skills.json", optional: true, reloadOnChange: false);
     ApplyQdrantProtocolFlags(builder.Configuration, args);
@@ -47,8 +48,9 @@ else if (args.Contains("--console"))
 else if (args.Contains("--setup"))
 {
     // Setup wizard mode: registers only setup services (no Qdrant connection needed)
-    var builder = Host.CreateApplicationBuilder(args);
-    builder.Logging.ClearProviders().AddConsole();
+    var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings { Args = args });
+    builder.Configuration.AddEnvironmentVariables();
+    builder.Logging.AddConsole();
     UserConfigLoader.AddUserConfig(builder.Configuration);
     builder.Services.AddSetupServices();
 
@@ -118,10 +120,13 @@ else if (TransportFlags.WantsHttp(args))
 else
 {
     // Default: MCP server mode via stdio (also explicit --stdio per D-03)
-    var builder = Host.CreateApplicationBuilder(args);
+    // Use CreateEmptyApplicationBuilder to avoid default EventLog provider registration,
+    // which crashes when run via 'dnx' (assembly probing can't find System.Diagnostics.EventLog).
+    var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings { Args = args });
+    builder.Configuration.AddEnvironmentVariables();
 
     // CRITICAL: ALL logging to stderr. Stdout is reserved for MCP JSON-RPC transport.
-    builder.Logging.ClearProviders().AddConsole(options =>
+    builder.Logging.AddConsole(options =>
     {
         options.LogToStandardErrorThreshold = LogLevel.Trace;
     });

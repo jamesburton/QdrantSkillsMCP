@@ -22,7 +22,7 @@ public sealed class ConfigWriterTests : IDisposable
             Directory.Delete(_tempDir, recursive: true);
     }
 
-    private static McpServerEntry DefaultEntry => new("qdrant-skills-mcp", "dnx", ["qdrant-skills-mcp"]);
+    private static McpServerEntry DefaultEntry => new("qdrant-skills-mcp", "dnx", ["QdrantSkillsMCP"]);
 
     #region ClaudeConfigWriter
 
@@ -296,11 +296,11 @@ public sealed class ConfigWriterTests : IDisposable
         Assert.NotNull(json["mcp"]);
         Assert.NotNull(json["mcp"]!["qdrant-skills-mcp"]);
 
-        // command should be an array ["dnx", "qdrant-skills-mcp"]
+        // command should be an array ["dnx", "QdrantSkillsMCP"]
         var command = json["mcp"]!["qdrant-skills-mcp"]!["command"]!.AsArray();
         Assert.Equal(2, command.Count);
         Assert.Equal("dnx", command[0]!.GetValue<string>());
-        Assert.Equal("qdrant-skills-mcp", command[1]!.GetValue<string>());
+        Assert.Equal("QdrantSkillsMCP", command[1]!.GetValue<string>());
         Assert.Equal("local", json["mcp"]!["qdrant-skills-mcp"]!["type"]!.GetValue<string>());
     }
 
@@ -508,7 +508,7 @@ public sealed class ConfigWriterTests : IDisposable
         Assert.Equal("dnx", command["path"]!.GetValue<string>());
         var args = command["args"]!.AsArray();
         Assert.Single(args);
-        Assert.Equal("qdrant-skills-mcp", args[0]!.GetValue<string>());
+        Assert.Equal("QdrantSkillsMCP", args[0]!.GetValue<string>());
     }
 
     [Fact]

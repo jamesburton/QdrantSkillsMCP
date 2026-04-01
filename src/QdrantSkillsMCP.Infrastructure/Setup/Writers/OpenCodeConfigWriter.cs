@@ -20,7 +20,7 @@ internal sealed class OpenCodeConfigWriter : JsonConfigWriterBase
 
     protected override JsonObject BuildServerNode(McpServerEntry entry)
     {
-        // opencode uses command as array: ["dnx", "qdrant-skills-mcp"]
+        // opencode uses command as array: ["dnx", "QdrantSkillsMCP"]
         var commandArray = new JsonArray { entry.Command };
         foreach (var arg in entry.Args)
             commandArray.Add(arg);

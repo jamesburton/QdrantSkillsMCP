@@ -259,7 +259,7 @@ public sealed class SetupWizard
     }
 
     private static McpServerEntry CreateDefaultEntry() =>
-        new("qdrant-skills-mcp", "dnx", ["qdrant-skills-mcp"]);
+        new("qdrant-skills-mcp", "dnx", ["QdrantSkillsMCP"]);
 
     private static string? GetDefaultConfigPath(IAgentConfigWriter writer, AgentScope scope)
         => writer.GetDefaultPath(scope);
