@@ -80,6 +80,13 @@ else if (TransportFlags.WantsHttp(args))
     });
 
     builder.Logging.ClearProviders().AddConsole();
+
+    // Apply --qdrant-grpc / --qdrant-http protocol flags
+    if (args.Contains("--qdrant-grpc"))
+        builder.Configuration["QdrantSkills:QdrantProtocol"] = "grpc";
+    else if (args.Contains("--qdrant-http"))
+        builder.Configuration["QdrantSkills:QdrantProtocol"] = "http";
+
     builder.Services.AddQdrantSkillsInfrastructure(builder.Configuration);
 
     // CORS per TRANS-05 (permissive for v1.1, tighten later)
