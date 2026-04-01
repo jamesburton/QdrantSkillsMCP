@@ -41,8 +41,18 @@ internal static class OnnxNativeLoader
                         return cached;
 
                     // System-level install (e.g. user has Microsoft.ML.OnnxRuntime installed globally).
+                    // Validate compatibility before using it: an older system DLL missing OrtGetCompileApi
+                    // causes a fatal 0xC0000005 crash in NativeMethods..cctor() on newer managed versions.
                     if (NativeLibrary.TryLoad(libraryName, out var system))
-                        return system;
+                    {
+                        if (NativeLibrary.TryGetExport(system, "OrtGetCompileApi", out _))
+                            return system;
+
+                        logger.LogDebug(
+                            "System-installed ONNX native library is version-incompatible " +
+                            "(missing OrtGetCompileApi). Falling back to versioned NuGet download.");
+                        NativeLibrary.Free(system);
+                    }
 
                     // Our local download cache.
                     var cachePath = GetCachePath();
