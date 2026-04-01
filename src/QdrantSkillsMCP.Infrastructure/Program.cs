@@ -36,7 +36,7 @@ else if (args.Contains("--console"))
     builder.Logging.ClearProviders().AddConsole();
     UserConfigLoader.AddUserConfig(builder.Configuration);
     builder.Configuration.AddJsonFile("qdrant-skills.json", optional: true, reloadOnChange: false);
-    ApplyQdrantProtocolFlags(builder, args);
+    ApplyQdrantProtocolFlags(builder.Configuration, args);
     builder.Services.AddQdrantSkillsInfrastructure(builder.Configuration);
 
     var host = builder.Build();
@@ -82,10 +82,7 @@ else if (TransportFlags.WantsHttp(args))
     builder.Logging.ClearProviders().AddConsole();
 
     // Apply --qdrant-grpc / --qdrant-http protocol flags
-    if (args.Contains("--qdrant-grpc"))
-        builder.Configuration["QdrantSkills:QdrantProtocol"] = "grpc";
-    else if (args.Contains("--qdrant-http"))
-        builder.Configuration["QdrantSkills:QdrantProtocol"] = "http";
+    ApplyQdrantProtocolFlags(builder.Configuration, args);
 
     builder.Services.AddQdrantSkillsInfrastructure(builder.Configuration);
 
@@ -131,7 +128,7 @@ else
 
     UserConfigLoader.AddUserConfig(builder.Configuration);
     builder.Configuration.AddJsonFile("qdrant-skills.json", optional: true, reloadOnChange: false);
-    ApplyQdrantProtocolFlags(builder, args);
+    ApplyQdrantProtocolFlags(builder.Configuration, args);
     builder.Services.AddQdrantSkillsInfrastructure(builder.Configuration);
 
     // MCP server with stdio transport -- tools auto-discovered from this assembly
@@ -147,15 +144,12 @@ else
 
 /// <summary>
 /// Applies --qdrant-grpc / --qdrant-http CLI flags to configuration.
+/// Accepts IConfigurationManager so it works with both HostApplicationBuilder and WebApplicationBuilder.
 /// </summary>
-static void ApplyQdrantProtocolFlags(HostApplicationBuilder builder, string[] args)
+static void ApplyQdrantProtocolFlags(IConfigurationManager config, string[] args)
 {
     if (args.Contains("--qdrant-grpc"))
-    {
-        builder.Configuration["QdrantSkills:QdrantProtocol"] = "grpc";
-    }
+        config["QdrantSkills:QdrantProtocol"] = "grpc";
     else if (args.Contains("--qdrant-http"))
-    {
-        builder.Configuration["QdrantSkills:QdrantProtocol"] = "http";
-    }
+        config["QdrantSkills:QdrantProtocol"] = "http";
 }

@@ -48,10 +48,10 @@ public sealed class CollectionInitializer : IDisposable
                         Distance = Distance.Cosine
                     },
                     cancellationToken: ct);
-            }
 
-            // Create payload indexes for efficient filtering
-            await CreatePayloadIndexesAsync(ct);
+                // Create payload indexes only on first collection creation (OPT-01)
+                await CreatePayloadIndexesAsync(ct);
+            }
 
             _initialized = true;
         }

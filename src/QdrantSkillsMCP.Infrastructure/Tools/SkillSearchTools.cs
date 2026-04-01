@@ -29,7 +29,7 @@ public sealed class SkillSearchTools(
 
     /// <summary>
     /// Searches for skills by semantic similarity. Returns ranked results with scores.
-    /// Includes an "ALREADY LOADED SKILLS" prefix listing skills previously loaded in this session.
+    /// In full mode, already-loaded skills are included as a JSON field in the response.
     /// </summary>
     [McpServerTool(Name = "search-skills", ReadOnly = true)]
     [Description("Search for skills by semantic similarity. Returns ranked results with scores. Use temperature (0.0=strict, 1.0=loose) to control match threshold. outputMode: 'full' (default, returns content and marks loaded), 'names' (name strings only), 'summaries' (name+description+tags+score).")]
@@ -55,11 +55,8 @@ public sealed class SkillSearchTools(
 
             var results = await repository.SearchAsync(queryEmbedding, maxResults, scoreThreshold, ct);
 
-            // Build already-loaded prefix
+            // Get already-loaded skills for inclusion in full-mode JSON response
             var loadedSkills = sessionTracker.GetLoadedSkills(sessionId);
-            var alreadyLoadedPrefix = loadedSkills.Count > 0
-                ? $"ALREADY LOADED SKILLS: {string.Join(", ", loadedSkills)}\n\n"
-                : string.Empty;
 
             string json;
             switch (mode)
@@ -107,7 +104,7 @@ public sealed class SkillSearchTools(
             logger.LogInformation("Search for '{Query}' returned {Count} results (outputMode={OutputMode})",
                 query, results.Count, mode);
 
-            return $"{alreadyLoadedPrefix}{json}";
+            return json;
         }
         catch (Exception ex)
         {

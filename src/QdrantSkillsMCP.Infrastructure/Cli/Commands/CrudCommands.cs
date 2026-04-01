@@ -24,7 +24,10 @@ internal static class CrudCommands
         var embedding = services.GetRequiredService<IEmbeddingService>();
 
         var skill = parser.ToSkill(content);
-        var vector = await embedding.GenerateEmbeddingAsync(skill.MarkdownBody, ct);
+        var embeddingText = string.IsNullOrEmpty(skill.Description)
+            ? skill.MarkdownBody
+            : $"{skill.Description}\n\n{skill.MarkdownBody}";
+        var vector = await embedding.GenerateEmbeddingAsync(embeddingText, ct);
         await repo.AddAsync(skill, vector, overwrite: false, ct);
 
         Console.WriteLine($"Added skill: {skill.Name}");
@@ -46,7 +49,10 @@ internal static class CrudCommands
         var embedding = services.GetRequiredService<IEmbeddingService>();
 
         var skill = parser.ToSkill(content);
-        var vector = await embedding.GenerateEmbeddingAsync(skill.MarkdownBody, ct);
+        var embeddingText = string.IsNullOrEmpty(skill.Description)
+            ? skill.MarkdownBody
+            : $"{skill.Description}\n\n{skill.MarkdownBody}";
+        var vector = await embedding.GenerateEmbeddingAsync(embeddingText, ct);
         await repo.UpdateAsync(skill, vector, ct);
 
         Console.WriteLine($"Updated skill: {skill.Name}");

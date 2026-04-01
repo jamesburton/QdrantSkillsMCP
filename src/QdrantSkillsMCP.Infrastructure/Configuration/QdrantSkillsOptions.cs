@@ -99,17 +99,3 @@ public sealed class QdrantSkillsOptions
     public string? QdrantProtocol { get; set; }
 }
 
-/// <summary>
-/// Qdrant connection protocol types.
-/// </summary>
-public enum QdrantProtocolType
-{
-    /// <summary>Native gRPC (default for localhost).</summary>
-    Grpc,
-
-    /// <summary>gRPC-Web over HTTP/1.1 (Azure App Service compatible).</summary>
-    GrpcWeb,
-
-    /// <summary>HTTP/REST API fallback.</summary>
-    Http
-}

@@ -157,8 +157,9 @@ public sealed class SkillFrontmatter
     public string? Version { get; set; }
 
     /// <summary>
-    /// Captures any frontmatter keys not explicitly mapped to properties.
-    /// Ensures no data is lost during parsing.
+    /// Captures the literal YAML key <c>extra:</c> from the frontmatter.
+    /// This does NOT capture arbitrary unknown keys — YamlDotNet maps only the exact alias "extra".
+    /// Unknown frontmatter keys are silently ignored (via <c>IgnoreUnmatchedProperties</c>).
     /// </summary>
     [YamlMember(Alias = "extra")]
     public Dictionary<string, object>? ExtraFields { get; set; }

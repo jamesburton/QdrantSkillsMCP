@@ -14,9 +14,13 @@ internal static class StatusCommand
     {
         var options = services.GetRequiredService<IOptions<QdrantSkillsOptions>>().Value;
 
+        var port = options.QdrantProtocol is "http" or "rest"
+            ? options.QdrantRestPort
+            : options.QdrantGrpcPort;
+
         formatter.FormatStatus(
             options.QdrantHost,
-            options.QdrantGrpcPort,
+            port,
             options.CollectionName,
             options.EmbeddingProvider?.ToString(),
             options.VectorDimensions);
