@@ -17,8 +17,8 @@ Requirements for shared server milestone. Each maps to roadmap phases.
 - [x] **TRANS-06**: Server configures Kestrel KeepAliveTimeout (2 hours) for long-lived SSE connections
 - [x] **TRANS-07**: Configurable listen URL/port via --url, ASPNETCORE_URLS, or config settings
 - [x] **TRANS-08**: dotnet pack with PackAsTool=true + FrameworkReference to ASP.NET Core produces valid NuGet package
-- [ ] **TRANS-09**: Existing stdio mode works identically after HTTP transport additions (regression verified)
-- [ ] **TRANS-10**: Dockerfile updated with EXPOSE, --streamable-http entrypoint, and auth env var placeholders
+- [x] **TRANS-09**: Existing stdio mode works identically after HTTP transport additions (regression verified)
+- [x] **TRANS-10**: Dockerfile updated with EXPOSE, --streamable-http entrypoint, and auth env var placeholders
 - [ ] **TRANS-11**: Configurable Qdrant protocol: `QdrantProtocol` config key supports `grpc` (default local), `grpc-web` (Azure-compatible), `http` (REST API)
 - [ ] **TRANS-12**: `--qdrant-grpc` flag forces gRPC — errors if connection fails; `--qdrant-http` flag forces REST API
 - [ ] **TRANS-13**: When no protocol specified, auto-detect: try gRPC, fall back to REST with warning if gRPC unavailable
@@ -105,8 +105,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TRANS-06 | Phase 5 | Complete |
 | TRANS-07 | Phase 5 | Complete |
 | TRANS-08 | Phase 5 | Complete |
-| TRANS-09 | Phase 5 | Pending |
-| TRANS-10 | Phase 5 | Pending |
+| TRANS-09 | Phase 5 | Complete |
+| TRANS-10 | Phase 5 | Complete |
 | AUTH-01 | Phase 6 | Pending |
 | AUTH-02 | Phase 6 | Pending |
 | AUTH-03 | Phase 6 | Pending |
