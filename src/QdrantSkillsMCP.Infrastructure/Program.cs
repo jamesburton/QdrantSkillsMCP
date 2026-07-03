@@ -12,6 +12,7 @@ using QdrantSkillsMCP.Infrastructure.Cli.Commands;
 using QdrantSkillsMCP.Infrastructure.Configuration;
 using QdrantSkillsMCP.Infrastructure.Health;
 using QdrantSkillsMCP.Infrastructure.Setup;
+using QdrantSkillsMCP.Infrastructure.Tools;
 using QdrantSkillsMCP.Infrastructure.Transport;
 
 // Transport conflict detection per D-04
@@ -105,7 +106,11 @@ else if (TransportFlags.WantsHttp(args))
             options.EnableLegacySse = true;
 #pragma warning restore MCP9004
         })
-        .WithToolsFromAssembly();
+        // Explicit tool registration (AOT-safe; replaces reflection-based WithToolsFromAssembly).
+        .WithTools<SkillSearchTools>()
+        .WithTools<SkillCrudTools>()
+        .WithTools<SessionTools>()
+        .WithTools<SkillGuideTools>();
 
     var app = builder.Build();
     app.UseCors();
@@ -140,7 +145,11 @@ else
     builder.Services
         .AddMcpServer()
         .WithStdioServerTransport()
-        .WithToolsFromAssembly();
+        // Explicit tool registration (AOT-safe; replaces reflection-based WithToolsFromAssembly).
+        .WithTools<SkillSearchTools>()
+        .WithTools<SkillCrudTools>()
+        .WithTools<SessionTools>()
+        .WithTools<SkillGuideTools>();
 
     await builder.Build().RunAsync();
 }
