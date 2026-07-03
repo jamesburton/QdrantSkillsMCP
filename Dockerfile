@@ -1,43 +1,48 @@
-# Multi-stage build for QdrantSkillsMCP MCP server
-# Stage 1: Build
+# Multi-stage build for the QdrantSkillsMCP MCP server (framework-dependent).
+#
+# Native AOT was evaluated but abandoned: the app relies on reflection-based
+# IOptions config binding, Semantic Kernel's BertOnnx connector, protobuf/gRPC
+# (Qdrant.Client) and reflection JSON on the tool hot path -- all RequiresDynamicCode
+# (IL3050), which throw under native AOT at runtime. Shipping framework-dependent.
+
+# Stage 1: Build + framework-dependent publish
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /repo
 
-# Copy solution and project files first for layer caching
+# Copy solution/props/project files first for restore-layer caching
 COPY QdrantSkillsMCP.slnx .
 COPY Directory.Build.props .
 COPY global.json .
 COPY src/QdrantSkillsMCP.Core/QdrantSkillsMCP.Core.csproj src/QdrantSkillsMCP.Core/
 COPY src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj src/QdrantSkillsMCP.Infrastructure/
 
-# Restore dependencies
 RUN dotnet restore src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj
 
-# Copy source
+# Copy sources and publish (framework-dependent -- runtime supplied by the aspnet base image)
 COPY src/ src/
-
-# Publish self-contained single binary
 RUN dotnet publish src/QdrantSkillsMCP.Infrastructure/QdrantSkillsMCP.Infrastructure.csproj \
     -c Release \
     --no-restore \
     -o /app/publish
 
-# Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+# Stage 2: Runtime -- chiseled ASP.NET (minimal, non-root UID 1654)
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS runtime
 WORKDIR /app
 
-EXPOSE 8080
+# LocalONNX (default embedding provider) downloads its model + native runtime on
+# demand into LocalApplicationData. On Linux .NET resolves that via XDG_DATA_HOME,
+# so pin it under a mountable path the non-root user can write to.
+ENV XDG_DATA_HOME=/data \
+    ASPNETCORE_ENVIRONMENT=Production
 
-# Copy published output
+# Persist the ONNX model / native-runtime cache across container restarts.
+# Bind-mount this at runtime (named volumes mount root-owned and the UID-1654
+# app user cannot write to them).
+VOLUME /data
+
 COPY --from=build /app/publish .
 
-# Default environment — override at runtime via -e or docker-compose
-ENV ASPNETCORE_ENVIRONMENT=Production \
-    QDRANT_SKILLS_URL=http://+:8080 \
-    QdrantSkills__QdrantHost=qdrant \
-    QdrantSkills__QdrantGrpcPort=6334 \
-    QdrantSkills__CollectionName=skills \
-    QdrantSkills__EmbeddingProvider=openai
+EXPOSE 8934
 
-# Default to HTTP in container; override with: docker run <image> --stdio
-ENTRYPOINT ["dotnet", "QdrantSkillsMCP.Infrastructure.dll", "--http"]
+# Bind to 0.0.0.0 so the mapped port is reachable from the host.
+ENTRYPOINT ["dotnet", "QdrantSkillsMCP.Infrastructure.dll", "--http", "--url", "http://0.0.0.0:8934"]
